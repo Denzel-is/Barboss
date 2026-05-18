@@ -24,33 +24,33 @@ npm install
 Copy-Item .env.example .env -Force
 ```
 
-3. Fill `DATABASE_URL` and `SESSION_SECRET` in `.env`.
+3. Fill `SESSION_SECRET` in `.env`.
 
-For local PostgreSQL with Docker:
+4. Start local Prisma Postgres without Docker:
 
 ```bash
-npm run db:up
+npm run db:local
 ```
 
-4. Generate Prisma client:
+5. Generate Prisma client:
 
 ```bash
 npm run db:generate
 ```
 
-5. Create and apply database migration:
+6. Sync the local database schema:
 
 ```bash
-npm run db:migrate -- --name init
+npm run db:push
 ```
 
-6. Seed initial users:
+7. Seed initial users and tasks:
 
 ```bash
 npm run db:seed
 ```
 
-7. Start the app:
+8. Start the app:
 
 ```bash
 npm run dev

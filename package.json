@@ -10,10 +10,10 @@
     "start": "next start",
     "prelint": "prisma generate",
     "lint": "eslint",
-    "db:up": "docker compose up -d postgres",
-    "db:down": "docker compose down",
+    "db:local": "node scripts/setup-local-db.mjs",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
     "db:seed": "prisma db seed"
   },
   "dependencies": {
@@ -40,8 +40,5 @@
     "tailwindcss": "^4",
     "tsx": "^4.22.1",
     "typescript": "^5"
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
   }
 }
