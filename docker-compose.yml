@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: barboss-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: barboss
+      POSTGRES_USER: barboss
+      POSTGRES_PASSWORD: barboss
+    ports:
+      - "5432:5432"
+    volumes:
+      - barboss_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U barboss -d barboss"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  barboss_postgres_data:

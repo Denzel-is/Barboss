@@ -26,6 +26,12 @@ Copy-Item .env.example .env -Force
 
 3. Fill `DATABASE_URL` and `SESSION_SECRET` in `.env`.
 
+For local PostgreSQL with Docker:
+
+```bash
+npm run db:up
+```
+
 4. Generate Prisma client:
 
 ```bash

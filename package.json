@@ -10,6 +10,8 @@
     "start": "next start",
     "prelint": "prisma generate",
     "lint": "eslint",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed"
