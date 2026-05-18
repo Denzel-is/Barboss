@@ -12,15 +12,24 @@ enum Role {
   participant
 }
 
+enum SubmissionStatus {
+  pending
+  approved
+  rejected
+}
+
 model User {
-  id            String         @id @default(cuid())
-  username      String         @unique
-  passwordHash  String
-  role          Role           @default(participant)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  logs          Log[]
-  notifications Notification[]
+  id                  String              @id @default(cuid())
+  username            String              @unique
+  passwordHash        String
+  role                Role                @default(participant)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  logs                Log[]
+  notifications       Notification[]
+  submissions         TaskSubmission[]    @relation("UserSubmissions")
+  reviewedSubmissions TaskSubmission[]    @relation("ReviewedSubmissions")
+  walletTransactions  WalletTransaction[]
 }
 
 model Log {
@@ -49,4 +58,72 @@ model Notification {
 
   @@index([createdAt])
   @@index([userId])
+}
+
+model Task {
+  id          String           @id @default(cuid())
+  title       String           @unique
+  description String
+  category    String
+  reward      Int
+  proofType   String           @default("text")
+  isDaily     Boolean          @default(false)
+  isPenalty   Boolean          @default(false)
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  submissions TaskSubmission[]
+
+  @@index([category])
+  @@index([isActive])
+}
+
+model TaskSubmission {
+  id           String           @id @default(cuid())
+  taskId       String
+  userId       String
+  status       SubmissionStatus @default(pending)
+  comment      String?
+  adminComment String?
+  proofText    String?
+  createdAt    DateTime         @default(now())
+  reviewedAt   DateTime?
+  reviewedBy   String?
+  task         Task             @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user         User             @relation("UserSubmissions", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer     User?            @relation("ReviewedSubmissions", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  files        SubmissionFile[]
+
+  @@index([status])
+  @@index([taskId])
+  @@index([userId])
+  @@index([reviewedBy])
+  @@index([createdAt])
+}
+
+model SubmissionFile {
+  id           String         @id @default(cuid())
+  submissionId String
+  fileUrl      String
+  fileType     String
+  fileName     String
+  createdAt    DateTime       @default(now())
+  submission   TaskSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([submissionId])
+}
+
+model WalletTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Int
+  type        String
+  sourceId    String?
+  description String
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sourceId])
+  @@index([createdAt])
 }

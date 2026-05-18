@@ -56,3 +56,5 @@ Open `http://localhost:3000`.
 
 - `admin` / `drayaparol` / `admin`
 - `rayakrutaya2006` / `rayakrutaya2006` / `participant`
+
+The seed script also creates the base Barboss task catalog.
