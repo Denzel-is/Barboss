@@ -18,6 +18,11 @@ enum SubmissionStatus {
   rejected
 }
 
+enum ShopPurchaseStatus {
+  purchased
+  cancelled
+}
+
 model User {
   id                  String              @id @default(cuid())
   username            String              @unique
@@ -30,6 +35,7 @@ model User {
   submissions         TaskSubmission[]    @relation("UserSubmissions")
   reviewedSubmissions TaskSubmission[]    @relation("ReviewedSubmissions")
   walletTransactions  WalletTransaction[]
+  shopPurchases       ShopPurchase[]
 }
 
 model Log {
@@ -125,5 +131,35 @@ model WalletTransaction {
 
   @@index([userId])
   @@index([sourceId])
+  @@index([createdAt])
+}
+
+model ShopItem {
+  id          String         @id @default(cuid())
+  title       String         @unique
+  description String
+  price       Int
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  purchases   ShopPurchase[]
+
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+model ShopPurchase {
+  id        String             @id @default(cuid())
+  userId    String
+  itemId    String
+  price     Int
+  status    ShopPurchaseStatus @default(purchased)
+  createdAt DateTime           @default(now())
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item      ShopItem           @relation(fields: [itemId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([itemId])
+  @@index([status])
   @@index([createdAt])
 }

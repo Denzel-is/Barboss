@@ -210,6 +210,34 @@ const tasks = [
   },
 ];
 
+const shopItems = [
+  {
+    title: "Кино",
+    description: "Поход в кино.",
+    price: 220,
+  },
+  {
+    title: "Басик",
+    description: "Поход в бассейн.",
+    price: 270,
+  },
+  {
+    title: "Мак",
+    description: "Поход в Мак.",
+    price: 300,
+  },
+  {
+    title: "Суши",
+    description: "Суши.",
+    price: 340,
+  },
+  {
+    title: "Дариджане",
+    description: "Дариджане.",
+    price: 400,
+  },
+];
+
 async function main() {
   for (const user of users) {
     const passwordHash = await bcrypt.hash(user.password, 12);
@@ -242,6 +270,21 @@ async function main() {
       },
       create: {
         ...task,
+        isActive: true,
+      },
+    });
+  }
+
+  for (const item of shopItems) {
+    await prisma.shopItem.upsert({
+      where: { title: item.title },
+      update: {
+        description: item.description,
+        price: item.price,
+        isActive: true,
+      },
+      create: {
+        ...item,
         isActive: true,
       },
     });
