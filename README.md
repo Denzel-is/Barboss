@@ -1,3 +1,58 @@
 # Barboss
 
-Project workspace for Barboss.
+Mobile-first Next.js application for Barboss.
+
+## Stack
+
+- Next.js + TypeScript
+- Tailwind CSS
+- Prisma
+- PostgreSQL
+- Cookie-based session auth
+
+## Local Setup
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Create local env file:
+
+```bash
+Copy-Item .env.example .env -Force
+```
+
+3. Fill `DATABASE_URL` and `SESSION_SECRET` in `.env`.
+
+4. Generate Prisma client:
+
+```bash
+npm run db:generate
+```
+
+5. Create and apply database migration:
+
+```bash
+npm run db:migrate -- --name init
+```
+
+6. Seed initial users:
+
+```bash
+npm run db:seed
+```
+
+7. Start the app:
+
+```bash
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+## Seed Users
+
+- `admin` / `drayaparol` / `admin`
+- `rayakrutaya2006` / `rayakrutaya2006` / `participant`

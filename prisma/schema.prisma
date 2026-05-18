@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  admin
+  participant
+}
+
+model User {
+  id            String         @id @default(cuid())
+  username      String         @unique
+  passwordHash  String
+  role          Role           @default(participant)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  logs          Log[]
+  notifications Notification[]
+}
+
+model Log {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  message   String?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([action])
+  @@index([createdAt])
+  @@index([userId])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String?
+  title     String
+  body      String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([userId])
+}
