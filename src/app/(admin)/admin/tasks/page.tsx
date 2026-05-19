@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import { ArchiveTaskButton } from "@/components/archive-task-button";
+import { EmptyState } from "@/components/empty-state";
+import { RewardFloat } from "@/components/reward-float";
 import { SectionPanel } from "@/components/section-panel";
 import { archiveTaskAction, createTaskAction, updateTaskAction } from "@/app/(admin)/admin/tasks/actions";
 import { getDb } from "@/lib/db";
@@ -126,7 +128,7 @@ function TaskForm({ action, buttonLabel, filter, mode, task }: TaskFormProps) {
         <span className="text-sm font-medium text-neutral-700">Proof type</span>
         <select
           className="mt-2 h-11 w-full rounded-[8px] border border-neutral-300 bg-white px-3 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-          defaultValue={task?.proofType ?? "text"}
+          defaultValue={task?.proofType ?? "video"}
           name="proofType"
         >
           <option value="text">text</option>
@@ -221,11 +223,12 @@ export default async function AdminTasksPage({ searchParams }: AdminTasksPagePro
 
       <SectionPanel eyebrow="Задания" title={`Список заданий: ${tasks.length}`}>
         {tasks.length === 0 ? (
-          <p>Заданий в этом фильтре нет.</p>
+          <EmptyState title="Нет заданий" description="В этом фильтре пока пусто." />
         ) : (
           <div className="space-y-3">
             {tasks.map((task) => (
-              <article className="rounded-[8px] border border-neutral-200 p-3" key={task.id}>
+              <article className="relative rounded-[8px] border border-neutral-200 p-3" key={task.id}>
+                <RewardFloat amount={task.reward} />
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-xs font-medium text-neutral-500">{task.category}</p>

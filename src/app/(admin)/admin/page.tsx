@@ -1,3 +1,6 @@
+import Link from "next/link";
+
+import { EmptyState } from "@/components/empty-state";
 import { SectionPanel } from "@/components/section-panel";
 import { getDb } from "@/lib/db";
 import { formatBalance } from "@/lib/format";
@@ -38,11 +41,17 @@ export default async function AdminHomePage() {
       <SectionPanel eyebrow="Главная" title="Админ-панель">
         <p className="text-3xl font-semibold text-neutral-950">{pendingCount}</p>
         <p className="mt-2 text-sm text-neutral-500">отправок ожидают проверки</p>
+        <Link
+          className="mt-4 inline-flex h-10 items-center rounded-[8px] bg-emerald-700 px-4 text-sm font-semibold text-white"
+          href="/admin/reports"
+        >
+          Открыть отчёты
+        </Link>
       </SectionPanel>
 
       <SectionPanel eyebrow="Магазин" title="Последние покупки">
         {latestPurchases.length === 0 ? (
-          <p>Покупок пока нет.</p>
+          <EmptyState title="Нет покупок" description="Последние покупки появятся здесь." />
         ) : (
           <ul className="divide-y divide-neutral-200">
             {latestPurchases.map((purchase) => (

@@ -1,0 +1,2077 @@
+ЭТАП 0. Сначала подготовка ассетов
+
+Перед редизайном лучше подготовить картинки.
+
+Структура папок
+
+В проекте создай:
+
+public/assets/brand/
+public/assets/mascots/
+public/assets/coins/
+public/assets/ui/
+Что туда положить
+public/assets/brand/logo-b.png
+public/assets/brand/logo-wordmark.png
+
+public/assets/mascots/couple-welcome.png
+public/assets/mascots/couple-phone.png
+public/assets/mascots/couple-tablet.png
+public/assets/mascots/couple-chat.png
+public/assets/mascots/couple-shop.png
+public/assets/mascots/couple-success.png
+
+public/assets/mascots/male-neutral.png
+public/assets/mascots/male-wave.png
+public/assets/mascots/male-phone.png
+public/assets/mascots/male-tablet.png
+public/assets/mascots/male-thumbs-up.png
+
+public/assets/mascots/female-neutral.png
+public/assets/mascots/female-wave.png
+public/assets/mascots/female-phone.png
+public/assets/mascots/female-heart.png
+public/assets/mascots/female-thumbs-up.png
+public/assets/mascots/female-thinking.png
+
+public/assets/coins/coin.png
+public/assets/coins/coin-stack.png
+public/assets/coins/coin-pile.png
+public/assets/coins/coin-floating.png
+public/assets/coins/coin-plus-1.png
+public/assets/coins/coin-plus-2.png
+public/assets/coins/coin-plus-3.png
+public/assets/coins/coin-plus-4.png
+public/assets/coins/coin-plus-5.png
+public/assets/coins/coin-plus-7.png
+public/assets/coins/coin-plus-8.png
+public/assets/coins/coin-plus-10.png
+public/assets/coins/coin-plus-25.png
+
+public/assets/ui/heart-easter.png
+public/assets/ui/gift-box.png
+public/assets/ui/empty-state.png
+public/assets/ui/error-404.png
+public/assets/ui/sparkle.png
+public/assets/ui/loading-ring.png
+
+Если пока нарезанных картинок нет, можно временно положить целые sheets, но лучше потом нарезать.
+
+ЭТАП 1. Глобальная дизайн-система Barboss
+
+Этот этап меняет базовый стиль всего приложения: цвета, фон, карточки, кнопки, нижнюю навигацию, шапку, анимации. Без изменения логики.
+
+Промпт для Cursor
+Ты работаешь с уже существующим проектом Barboss.
+
+Сейчас дизайн приложения темный, технический и выглядит как MVP. Нужно начать полный premium light redesign, но на этом этапе меняй только глобальную дизайн-систему, базовые стили, layout-компоненты, shared UI-компоненты, header и bottom navigation. Не трогай бизнес-логику, API, auth, БД, Supabase upload, чат, отправку заданий и магазин.
+
+Главная цель визуального стиля:
+Приложение должно выглядеть как дорогой мобильный продукт в стиле premium lifestyle / reward app:
+- светлый warm cream фон;
+- белые карточки;
+- emerald green как основной акцент;
+- gold/beige детали;
+- мягкие тени;
+- большие скругления;
+- много воздуха;
+- mobile-first;
+- визуально похоже на сгенерированные Barboss концепты с маскотами, монетами и белым интерфейсом.
+
+Нельзя:
+- оставлять текущий темно-зеленый фон как основной;
+- делать тяжелые темные full-screen панели;
+- менять backend;
+- переписывать проект с нуля;
+- ломать routes;
+- ломать авторизацию;
+- удалять существующие компоненты без необходимости.
+
+Нужно найти текущие файлы:
+- global css;
+- Tailwind config, если есть;
+- общий app layout;
+- header;
+- bottom navigation;
+- button/card/input компоненты, если они есть.
+
+Добавь или обнови CSS variables:
+
+:root {
+  --bb-bg: #F8F5EF;
+  --bb-bg-soft: #FFFDF8;
+  --bb-card: #FFFFFF;
+  --bb-card-warm: #FBF7EF;
+
+  --bb-green-950: #06281E;
+  --bb-green-900: #0B3D2E;
+  --bb-green-800: #0F4F38;
+  --bb-green-700: #0F6B4A;
+  --bb-green-500: #18A66A;
+  --bb-green-300: #BFE8D0;
+  --bb-green-soft: #E8F5EE;
+
+  --bb-gold: #C9A15A;
+  --bb-gold-soft: #F2E4C6;
+  --bb-brown: #8B6F47;
+
+  --bb-text: #17352A;
+  --bb-muted: #7B877F;
+  --bb-border: #E8DED0;
+
+  --bb-danger: #E75D5D;
+  --bb-danger-soft: #FBEAEA;
+  --bb-success: #0F8F5A;
+  --bb-warning: #C9A15A;
+}
+
+Body:
+- background должен быть #F8F5EF;
+- добавить мягкие radial-gradient пятна:
+  1. сверху слева золотое пятно opacity 0.12;
+  2. сверху справа зеленое пятно opacity 0.10;
+  3. снизу светлое кремовое пятно.
+- color: var(--bb-text);
+- font-smoothing включить.
+- min-height: 100vh.
+
+Общий mobile container:
+Создай или обнови класс/компонент AppShell:
+- max-width: 430px;
+- width: 100%;
+- margin: 0 auto;
+- min-height: 100dvh;
+- background: transparent или var(--bb-bg);
+- padding-bottom должен учитывать нижнюю навигацию и safe-area:
+  padding-bottom: calc(96px + env(safe-area-inset-bottom));
+- overflow-x: hidden.
+
+Page content:
+- все страницы должны иметь padding-left/right 20px;
+- верхний отступ после header 16px;
+- между крупными секциями 16-20px.
+
+Карточки:
+Создай reusable class premium-card:
+- background: rgba(255, 255, 255, 0.88);
+- border: 1px solid rgba(232, 222, 208, 0.9);
+- border-radius: 28px;
+- box-shadow:
+  0 18px 40px rgba(23, 53, 42, 0.08),
+  0 2px 8px rgba(23, 53, 42, 0.04);
+- backdrop-filter: blur(10px);
+- padding: 20px;
+- position: relative;
+- overflow: hidden.
+
+Маленькие карточки:
+premium-card-sm:
+- border-radius: 22px;
+- padding: 16px;
+- box-shadow мягче.
+
+Кнопки:
+Создай/обнови стили:
+1. primary button:
+- height: 56px;
+- border-radius: 18px;
+- background: linear-gradient(135deg, #0B3D2E 0%, #0F6B4A 55%, #18A66A 100%);
+- color: white;
+- font-weight: 700;
+- font-size: 16px;
+- box-shadow: 0 12px 28px rgba(15, 107, 74, 0.28);
+- active transform: scale(0.98).
+
+2. secondary button:
+- height: 52px;
+- border-radius: 18px;
+- background: #FFFFFF;
+- border: 1px solid #E8DED0;
+- color: #0F4F38;
+- font-weight: 700;
+- box-shadow: 0 8px 22px rgba(23, 53, 42, 0.06).
+
+3. ghost button:
+- background: transparent;
+- color: #0F6B4A;
+- font-weight: 700.
+
+4. disabled button:
+- background: #EEE9DF;
+- color: #A4A69F;
+- box-shadow: none;
+- cursor: not-allowed.
+
+Inputs:
+- height: 56px;
+- border-radius: 18px;
+- background: #FFFFFF;
+- border: 1px solid #E8DED0;
+- color: #17352A;
+- padding: 0 16px;
+- focus border #0F6B4A;
+- focus box-shadow 0 0 0 4px rgba(15, 107, 74, 0.12).
+
+Textarea:
+- min-height: 120px;
+- border-radius: 22px;
+- padding: 16px;
+- same focus style.
+
+Badges:
+Создай status badge:
+- pending: background #FFF4D8, color #8B6F47, border #F2E4C6;
+- approved: background #E8F5EE, color #0F6B4A;
+- rejected: background #FBEAEA, color #C94C4C;
+- neutral: background #F4EFE7, color #7B877F.
+
+Reward badge:
+- inline-flex;
+- height 36px;
+- border-radius 999px;
+- background #E8F5EE;
+- color #0F6B4A;
+- font-weight 800;
+- padding 0 12px;
+- icon coin optional 22px.
+
+Header:
+Переделай общий header:
+- высота не фиксированная, но визуально компактная;
+- padding top: calc(14px + env(safe-area-inset-top));
+- padding left/right: 20px;
+- padding bottom: 12px;
+- background transparent;
+- border-bottom убрать или сделать очень мягкий rgba(232,222,208,0.55);
+- слева:
+  - маленький текст Barboss зеленым 14px/600;
+  - ниже title страницы 28px/800;
+  - ниже username 15px color muted.
+- справа:
+  - notification button 48x48 white circle/card;
+  - logout button 48px height, rounded 16px, white background.
+- расстояние между notification и logout 10px.
+- notification badge red/green маленький 18px круг в правом верхнем углу.
+
+Bottom navigation:
+Переделай нижнюю навигацию:
+- fixed bottom: calc(12px + env(safe-area-inset-bottom));
+- left: 50%; transform translateX(-50%);
+- width: calc(100% - 32px);
+- max-width: 398px;
+- height: 74px;
+- background: rgba(255,255,255,0.92);
+- border: 1px solid rgba(232,222,208,0.95);
+- border-radius: 999px;
+- box-shadow: 0 18px 44px rgba(23,53,42,0.16);
+- backdrop-filter: blur(18px);
+- display flex;
+- align-items center;
+- justify-content space-around;
+- z-index высокий.
+Каждый item:
+- flex: 1;
+- height: 58px;
+- border-radius: 999px;
+- display flex column;
+- icon 24px;
+- label 12px;
+- inactive color #7B877F;
+- active:
+  background: #E8F5EE;
+  color #0F6B4A;
+  icon color #0F6B4A;
+  font-weight 700;
+- active item не должен быть слишком большим, чтобы не ломать 5 пунктов.
+- добавить transition 180ms ease.
+- on active/tap scale 0.97.
+
+Animations:
+Добавь keyframes:
+- bb-fade-up: opacity 0 to 1, translateY(12px) to 0;
+- bb-soft-scale: scale 0.98 to 1;
+- bb-float: translateY(0), translateY(-8px), translateY(0);
+- bb-shimmer for skeleton.
+Создай классы:
+- animate-bb-fade-up;
+- animate-bb-float;
+- skeleton.
+
+Typography:
+- h1: 30px, line-height 1.08, font-weight 850;
+- h2: 24px, font-weight 800;
+- h3: 18px, font-weight 800;
+- body: 15-16px, line-height 1.55;
+- muted: color #7B877F.
+
+После изменений:
+1. Убедись, что проект собирается.
+2. Напиши список измененных файлов.
+3. Напиши, какие компоненты теперь можно использовать на следующих этапах.
+
+
+
+ЭТАП 2. Login page “как премиальная welcome-страница”
+
+Тут нужна максимальная похожесть на картинку: сверху логотип, много белого, большая иллюстрация маскотов, карточка входа снизу.
+
+Промпт для Cursor
+Переделай только страницу Login проекта Barboss в premium light mobile design.
+
+Не меняй backend авторизации, обработчик login, cookies/session и redirect. Меняй только JSX/TSX/CSS/Tailwind визуальный слой.
+
+Ориентир дизайна:
+Светлая welcome-страница как premium mobile app onboarding:
+- кремово-белый фон;
+- сверху логотип Barboss;
+- большая иллюстрация двух маскотов;
+- ниже белая карточка входа;
+- зеленая premium кнопка;
+- мягкие золотые детали, сердечки, монета;
+- много воздуха.
+
+Использовать ассеты, если существуют:
+- /assets/brand/logo-b.png
+- /assets/brand/logo-wordmark.png
+- /assets/mascots/couple-welcome.png
+- /assets/coins/coin-floating.png
+- /assets/ui/sparkle.png
+Если ассетов нет, сделать fallback через текстовый логотип и CSS-декор.
+
+Точная структура страницы:
+
+1. Обертка страницы:
+- min-height: 100dvh;
+- max-width: 430px;
+- margin: 0 auto;
+- padding:
+  top calc(18px + env(safe-area-inset-top));
+  left 20px;
+  right 20px;
+  bottom 24px;
+- background:
+  radial-gradient circle at top left gold 0.13 opacity,
+  radial-gradient circle at top right green 0.10 opacity,
+  var(--bb-bg).
+- display flex column.
+- overflow hidden.
+
+2. Header/logo area:
+Расположить сверху по центру.
+- margin-top: 8px;
+- text-align center;
+- height примерно 86px.
+Внутри:
+- logo icon 52x52 по центру.
+  Если картинки нет, сделать круг/щит с буквой B:
+  width 52, height 52, border-radius 18px, border 1px solid #E8DED0, color green, маленькая crown text/emoji сверху можно.
+- Ниже wordmark “Barboss”:
+  font-size 42px;
+  font-family serif или current font если serif нет;
+  font-weight 700;
+  letter-spacing 0.02em;
+  color #0B3D2E.
+- Под ним tagline:
+  “Твой день. Твои задания. Твой рост.”
+  font-size 12px;
+  text-transform uppercase;
+  letter-spacing 0.12em;
+  color #8B6F47;
+  margin-top 4px.
+
+3. Hero mascot area:
+- position relative;
+- height: 330px на 390px ширине;
+- margin-top: 8px;
+- display flex;
+- align-items flex-end;
+- justify-content center.
+Внутри:
+- light oval/circle backdrop behind mascots:
+  position absolute;
+  width 300px;
+  height 300px;
+  border-radius 999px;
+  background linear-gradient #FFFDF8 to #F2E4C6 0.35 opacity;
+  top 12px;
+  left 50%;
+  transform translateX(-50%).
+- image couple-welcome:
+  width: 315px;
+  max-width: 95%;
+  height auto;
+  object-fit contain;
+  position relative;
+  z-index 2;
+  animation float 5s infinite ease-in-out.
+Если картинки нет:
+  показать premium-card с текстом “Добро пожаловать в Barboss”.
+- добавить маленькие decorative floating элементы:
+  - coin справа top: 44px, 34x34;
+  - heart слева middle;
+  - sparkle справа/слева через CSS.
+Не переборщить.
+
+4. Login card:
+- white card с position relative;
+- margin-top: -18px, чтобы карточка слегка наехала на hero;
+- padding: 22px;
+- border-radius: 30px;
+- background rgba(255,255,255,0.92);
+- border 1px solid #E8DED0;
+- box-shadow 0 22px 52px rgba(23,53,42,0.12);
+- z-index 3.
+Внутри сверху:
+- small pill:
+  “Личный кабинет”
+  height 30px;
+  background #E8F5EE;
+  color #0F6B4A;
+  border-radius 999px;
+  padding 0 12px;
+  font-size 13px;
+  font-weight 700.
+- h1:
+  “Вход”
+  font-size 30px;
+  line-height 1.1;
+  margin-top 14px.
+- description:
+  “Задания, чат, магазин и райданчики в одном месте.”
+  color muted;
+  font-size 15px;
+  line-height 1.5;
+  margin-top 8px.
+
+5. Form:
+- margin-top 22px.
+- label “Логин” font-size 14 font-weight 700 color text.
+- input height 56, border-radius 18, background #FFFDF8.
+- margin-bottom 16.
+- label “Пароль”.
+- password input same.
+- Если есть message “Вы вышли из аккаунта”, показать его как soft green info card:
+  height auto;
+  padding 12px 14px;
+  border-radius 16px;
+  background #E8F5EE;
+  color #0F6B4A;
+  font-weight 600;
+  margin-top 14px.
+- submit button:
+  full width;
+  height 58px;
+  margin-top 18px;
+  border-radius 20px;
+  emerald gradient;
+  text “Войти”;
+  right arrow icon optional.
+- Под кнопкой маленький текст:
+  “Barboss сохраняет историю действий без удаления.”
+  font-size 12px;
+  color muted;
+  text-align center;
+  margin-top 14px.
+
+6. Responsive:
+- На маленькой высоте iPhone, hero уменьшить до 280px.
+- На ширине 375px карточка не должна вылезать.
+- Нельзя чтобы кнопка была ниже экрана без скролла.
+- Если контент не помещается, разрешить scroll, но дизайн должен выглядеть как app onboarding.
+
+7. Убрать:
+- старую темную карточку входа;
+- текущий логотип-заглушку BB в темной карточке;
+- темно-зеленый full screen.
+
+После изменений проверь:
+- login работает;
+- ошибки login показываются красиво;
+- logout message показывается красиво;
+- redirect работает.
+ЭТАП 3. Пользовательский layout: шапка и общая структура страниц
+
+Здесь важно, чтобы на всех страницах была одна красивая структура, а не огромная темная шапка.
+
+Промпт
+Переделай user app layout для всех пользовательских страниц Barboss.
+
+Не меняй маршруты, auth guard, logout, notification count, данные пользователя. Меняй только визуальное расположение.
+
+Цель:
+Сделать общий пользовательский экран как premium light mobile app:
+- компактная верхняя шапка;
+- светлый фон;
+- контент в карточках;
+- нижняя floating navigation;
+- страницы не должны выглядеть как админка.
+
+Текущие страницы пользователя:
+- Главная
+- Задания
+- Магазин
+- Чат
+- История
+- Уведомления
+- Отправка задания
+
+Точная структура layout:
+
+1. Главная обертка:
+- max-width: 430px;
+- min-height: 100dvh;
+- margin 0 auto;
+- background: var(--bb-bg);
+- padding-bottom: calc(104px + env(safe-area-inset-bottom));
+- position relative;
+- overflow-x hidden.
+- Добавить псевдо-декор/фон:
+  - top radial gold/green;
+  - очень мягкий.
+
+2. Header:
+Высота визуально около 118px, но зависит от safe-area.
+- padding:
+  top calc(16px + env(safe-area-inset-top));
+  left 20px;
+  right 20px;
+  bottom 14px.
+- display flex;
+- align-items flex-start;
+- justify-content space-between.
+- gap 12px.
+
+Левая часть:
+- маленький brand line:
+  “Barboss”
+  color #0F6B4A;
+  font-size 14px;
+  font-weight 800;
+  letter-spacing 0.02em.
+- page title:
+  Для participant заменить общий “Приложение” на динамический заголовок страницы:
+  Главная: “Привет, Raya!”
+  Задания: “Задания”
+  Магазин: “Магазин”
+  Чат: “Чат”
+  История: “История”
+  Уведомления: “Уведомления”
+  Если динамический title сложно, хотя бы оставь “Приложение”, но визуально сделай красиво.
+  font-size 28px;
+  line-height 1.1;
+  font-weight 850;
+  color #17352A.
+- username:
+  @rayakrutaya2006
+  font-size 15px;
+  color #7B877F;
+  margin-top 6px.
+
+Правая часть:
+- row flex gap 10.
+- notification button:
+  48x48;
+  rounded 16px;
+  background white;
+  border #E8DED0;
+  box-shadow 0 8px 20px rgba...
+  icon green/dark.
+  badge если unread > 0:
+  top -5 right -5;
+  20x20;
+  background #E75D5D или #0F6B4A;
+  white text 11px.
+- logout button:
+  height 48;
+  padding 0 16;
+  border-radius 16;
+  background white;
+  border #E8DED0;
+  color #17352A;
+  font-weight 700.
+На 375px если не помещается, текст “Выйти” можно оставить, но сделать ширину auto и font-size 14.
+
+3. Page content slot:
+- padding 0 20px;
+- margin-top 8px.
+- Все страницы получают одинаковую ширину.
+- Добавить animation fade-up для page content.
+
+4. Bottom navigation:
+Использовать floating white pill.
+Позиция:
+- fixed;
+- bottom calc(12px + env(safe-area-inset-bottom));
+- left 50%;
+- transform translateX(-50%);
+- width calc(100% - 32px);
+- max-width 398px;
+- height 74px;
+- padding 8px;
+- border-radius 999px;
+- background rgba(255,255,255,0.94);
+- border 1px solid #E8DED0;
+- box-shadow 0 18px 46px rgba(23,53,42,0.16);
+- backdrop-filter blur(18px).
+Items:
+- 5 items equally spaced.
+- item height 58.
+- active item background #E8F5EE.
+- active icon/text #0F6B4A.
+- inactive #7B877F.
+- label 11.5px.
+- icon 23-24px.
+- Если текущие иконки через lucide/react-icons, оставить их, но обновить размеры и цвета.
+- Active item должен иметь soft green glow.
+
+5. Не должно быть:
+- тяжелой темной шапки на всю ширину;
+- жестких border lines между header и content;
+- темной нижней навигации;
+- фоновых зеленых панелей.
+
+6. Проверить:
+- все страницы остаются доступны;
+- active nav работает;
+- notification button ведет куда нужно;
+- logout работает;
+- iPhone safe-area не перекрывает nav.
+ЭТАП 4. Главная страница
+
+Сейчас главная пустая. Нужно сделать ее как главный premium dashboard.
+
+Промпт
+Переделай только пользовательскую главную страницу Barboss.
+
+Не меняй запросы к данным, не меняй баланс, pending count, историю операций. Меняй только layout и визуальные компоненты.
+
+Цель:
+Главная должна выглядеть как premium reward dashboard с маскотами, балансом райданчиков и быстрыми действиями.
+
+Использовать ассеты:
+- /assets/mascots/couple-welcome.png
+- /assets/mascots/female-wave.png
+- /assets/coins/coin.png
+- /assets/coins/coin-stack.png
+- /assets/ui/empty-state.png
+Если ассета нет, сделать fallback.
+
+Точная структура страницы сверху вниз:
+
+1. Hero card:
+Расположение:
+- сразу под header;
+- margin-top 8px;
+- width 100%;
+- min-height 250px;
+- border-radius 32px;
+- background:
+  linear-gradient(145deg, #FFFFFF 0%, #FFFDF8 55%, #F2E4C6 140%);
+- border 1px solid #E8DED0;
+- box-shadow 0 24px 56px rgba(23,53,42,0.10);
+- padding 20px;
+- position relative;
+- overflow hidden.
+
+Внутри hero:
+Левая часть сверху:
+- small pill “Сегодня”
+  background #E8F5EE, color #0F6B4A, font 13/700, padding 8px 12px.
+- h1 “Привет, Raya! 👋”
+  font-size 30px;
+  line-height 1.08;
+  margin-top 14px;
+  max-width 210px.
+- subtitle:
+  “Выполняй задания и собирай райданчики.”
+  font-size 15px;
+  color #7B877F;
+  line-height 1.45;
+  max-width 210px;
+  margin-top 8px.
+
+Правая/нижняя часть:
+- mascot image couple-welcome:
+  position absolute;
+  right -18px;
+  bottom -8px;
+  width 230px;
+  max-height 245px;
+  object-fit contain;
+  z-index 2.
+На 375px:
+  width 205px;
+  right -28px.
+- Добавить soft oval backdrop behind mascot:
+  position absolute;
+  right -30px;
+  bottom 12px;
+  width 230px;
+  height 230px;
+  border-radius 999px;
+  background rgba(232,245,238,0.85).
+
+Декор:
+- маленькая монета coin.png:
+  position absolute;
+  right 24px;
+  top 22px;
+  width 42px;
+- sparkle dots через CSS.
+
+2. Balance card:
+Под hero:
+- margin-top 16px;
+- display grid;
+- grid-template-columns 1fr 1fr;
+- gap 12px.
+
+Левая большая карточка “Баланс”:
+- background #0B3D2E или emerald gradient;
+- color white;
+- border-radius 28px;
+- padding 18px;
+- min-height 132px;
+- box-shadow green.
+- Внутри:
+  - row: coin icon 42x42 + label “Баланс”
+  - число:
+    "{balance} райданчиков"
+    font-size 30px;
+    font-weight 850;
+    margin-top 16px.
+  - small muted light:
+    “Твоя наградная копилка”
+
+Правая карточка “На проверке”:
+- background white;
+- border;
+- border-radius 28px;
+- padding 18px;
+- min-height 132px.
+- label “На проверке”
+- number pending count font-size 34 font-weight 850 color green.
+- text “ожидают ответа”
+- icon/checklist в light green circle.
+
+3. Quick actions:
+- margin-top 16px.
+- Заголовок row:
+  h2 “Быстрые действия”
+- Сетка 3 карточки в одну строку или горизонтальный scroll:
+  1. “Задания” icon clipboard, text “заработать”
+  2. “Магазин” icon bag/gift, text “потратить”
+  3. “Чат” icon chat, text “написать”
+- Каждая карточка:
+  width если grid: calc 33%;
+  min-height 96px;
+  border-radius 24px;
+  background white;
+  border #E8DED0;
+  padding 14px;
+  display flex column;
+  icon circle 38x38.
+- На 375px можно horizontal scroll, cards width 124px.
+
+4. “Сегодня можно заработать” section:
+Если есть tasks preview данные, показать 2-3 задания. Если нет данных, сделать статический visual block без ломания логики:
+- margin-top 18px.
+- premium-card.
+- header:
+  h2 “Сегодня можно заработать”
+  small “Открой задания”
+- Внутри:
+  - mini row with coin-stack image;
+  - text “Выполни ежедневные задания и накопи на награды.”
+  - button/link “К заданиям”.
+Если можно подтянуть реальные tasks, покажи первые 3 active daily tasks:
+  title, reward badge.
+
+5. Последние операции:
+Заменить текущую скучную карточку.
+- margin-top 18px.
+- h2 “Последние операции”
+- Если операций нет:
+  premium empty state:
+  white card;
+  centered icon empty-state.png 96px;
+  title “Пока нет операций”
+  description “История появится после заданий и покупок.”
+- Если операции есть:
+  list rows:
+  - icon circle;
+  - title;
+  - date;
+  - amount справа green/red.
+
+6. Общие правила:
+- Все карточки animate fade-up with small stagger if easy.
+- Не использовать темные большие фоны кроме balance card.
+- Не показывать технические типы.
+- Все должно помещаться на iPhone 390px.
+- Bottom navigation не должна перекрывать последний блок: добавить padding-bottom.
+
+Проверь:
+- balance отображается правильно;
+- pending count отображается правильно;
+- ссылки на Задания/Магазин/Чат работают;
+- empty state работает.
+ЭТАП 5. Страница заданий
+
+Здесь нужно сделать “игровую ленту заданий”, как в концепте.
+
+Промпт
+Переделай только пользовательскую страницу Задания Barboss.
+
+Не меняй получение заданий, отправку на проверку, routes, API и business logic. Меняй только визуальное расположение и компоненты.
+
+Цель:
+Страница заданий должна выглядеть как premium rewards/tasks screen:
+- светлый фон;
+- hero с маскотом;
+- категории как горизонтальные pill-tabs;
+- карточки заданий белые и дорогие;
+- награды как красивые green/gold badges;
+- кнопки emerald;
+- удобный mobile-first.
+
+Использовать ассеты:
+- /assets/mascots/couple-tablet.png
+- /assets/mascots/female-pointing.png
+- /assets/coins/coin.png
+- /assets/coins/coin-plus-1.png
+- /assets/coins/coin-plus-2.png
+- /assets/coins/coin-plus-3.png
+- /assets/coins/coin-plus-4.png
+- /assets/coins/coin-plus-5.png
+- /assets/coins/coin-plus-7.png
+- /assets/coins/coin-plus-8.png
+- /assets/coins/coin-plus-10.png
+- /assets/ui/empty-state.png
+
+Точная структура:
+
+1. Tasks hero:
+- margin-top 8px;
+- min-height 210px;
+- border-radius 32px;
+- background white/cream gradient;
+- border 1px solid #E8DED0;
+- box-shadow soft;
+- padding 20px;
+- position relative;
+- overflow hidden.
+
+Внутри:
+- small pill “Задания”
+- h1 “Зарабатывай райданчики”
+  font-size 29-30;
+  max-width 220px.
+- subtitle:
+  “Выбирай задание, отправляй доказательство и жди проверки.”
+  color muted;
+  max-width 210px.
+- mascot image female-pointing or couple-tablet:
+  position absolute;
+  right -18px;
+  bottom -8px;
+  width 185px;
+  object-fit contain.
+- coin decoration top right 38px.
+- Если картинка отсутствует, просто не показывать.
+
+2. Balance/summary mini strip:
+Под hero:
+- margin-top 14px;
+- display flex;
+- gap 10;
+- horizontal scroll if needed.
+Карточки:
+  1. “Доступно” count active tasks
+  2. “На проверке” pending count if available
+  3. “Райданчики” balance if available
+Каждая:
+- background white;
+- border;
+- border-radius 22px;
+- padding 14px 16px;
+- min-width 128px.
+- number font-size 24/800.
+
+3. Category tabs:
+- margin-top 18px;
+- horizontal scroll;
+- padding-bottom 4px;
+- gap 8.
+Tabs:
+- “Все”
+- “Ежедневные”
+- “Спорт”
+- “Встреча”
+- “Милые”
+- “Видео”
+- “Ричи”
+- “Штрафы”
+Если текущая логика уже группирует по категориям, используй ее. Если нет, хотя бы визуально оформи существующие категории.
+Tab style:
+- height 42px;
+- border-radius 999px;
+- padding 0 16px;
+- active background #0F6B4A, color white;
+- inactive background white, color #17352A, border #E8DED0.
+- white-space nowrap.
+
+4. Секции:
+Для каждой категории:
+- margin-top 20px;
+- section header:
+  - h2 category name font 22/850;
+  - маленький count справа.
+- gap между карточками 14px.
+
+5. Task card:
+Каждая карточка должна иметь точную структуру:
+- background white;
+- border 1px solid #E8DED0;
+- border-radius 28px;
+- padding 18px;
+- box-shadow soft;
+- position relative;
+- overflow hidden.
+
+Верхняя строка:
+- слева category label:
+  font-size 13;
+  color #8B6F47 или #0F6B4A;
+  font-weight 700;
+- справа reward badge:
+  height 36;
+  border-radius 999;
+  background #E8F5EE;
+  color #0F6B4A;
+  display flex align center gap 6;
+  padding 0 12;
+  font-weight 850;
+  text:
+    +8 райданчиков
+  Если reward negative, background danger-soft, color danger, text -10 райданчиков.
+  Если есть coin image, 22x22 перед текстом.
+
+Title:
+- margin-top 12px;
+- font-size 21px;
+- line-height 1.22;
+- font-weight 850;
+- color #17352A.
+
+Description:
+- margin-top 8px;
+- font-size 15px;
+- line-height 1.45;
+- color #7B877F.
+
+Tags row:
+- margin-top 14px;
+- display flex;
+- gap 8;
+- flex-wrap wrap.
+Tags:
+- height 30px;
+- padding 0 10px;
+- border-radius 999;
+- background #F4EFE7;
+- color #7B877F;
+- font-size 13px;
+- font-weight 700.
+- Для video tag сделать background #E8F5EE color #0F6B4A.
+- Для penalty tag danger-soft color danger.
+
+Action button:
+- margin-top 16px;
+- width 100%;
+- height 52px;
+- border-radius 18px;
+- emerald gradient;
+- text “Отправить на проверку”.
+- Если задание недоступно/архивировано, disabled.
+- Add active scale.
+
+Optional visual:
+- В правом нижнем углу карточки можно добавить полупрозрачную монету/иконку:
+  position absolute; right -10; bottom -12; width 72; opacity 0.08.
+
+6. Empty state:
+Если заданий нет:
+- premium-card centered;
+- image empty-state 110px;
+- title “Пока нет заданий”
+- description “Админ скоро добавит новые задания.”
+- button optional “Обновить”.
+
+7. Важное:
+- Сохрани существующую кнопку/ссылку отправки задания.
+- Не меняй id задания.
+- Не меняй route.
+- Не ломай форму отправки.
+- Не показывай технические названия proofType без красивого оформления.
+- proof: video можно показывать как “Видео”.
+- isDaily как “Ежедневное”.
+
+После изменений:
+- Проверь, что все задания открываются.
+- Проверь, что кнопка отправить ведет на правильную форму.
+ЭТАП 6. Страница отправки задания
+
+Это самый функциональный экран, где камера. Нужно не сломать.
+
+Промпт
+Переделай только страницу отправки задания на проверку.
+
+Не меняй логику камеры, Supabase upload, отправку формы, task id, API, storage, validation. Меняй только внешний вид и расположение.
+
+Цель:
+Сделать экран отправки задания как premium mobile submission flow:
+- сверху красивая карточка задания;
+- ниже понятные поля;
+- video recorder выглядит как дорогой компонент;
+- кнопка отправки заметная;
+- все mobile-first.
+
+Использовать ассеты:
+- /assets/coins/coin.png
+- /assets/mascots/female-phone.png
+- /assets/ui/camera.png если есть
+- /assets/ui/sparkle.png если есть
+
+Точная структура:
+
+1. Page top card: Task summary
+Сразу под header:
+- premium-card;
+- border-radius 32px;
+- padding 20px;
+- min-height 150px;
+- background linear-gradient 145deg white/cream.
+- position relative;
+- overflow hidden.
+
+Внутри:
+- top row:
+  - small category pill слева;
+  - reward badge справа:
+    coin icon + “+8 райданчиков”.
+- title:
+  task.title
+  font-size 25px;
+  line-height 1.15;
+  font-weight 850;
+  margin-top 14px.
+- description:
+  task.description
+  font-size 15px;
+  color muted;
+  line-height 1.5;
+  margin-top 8px.
+- tags row:
+  “Ежедневное”, “Видео”, “Доказательство”
+- decorative coin:
+  position absolute;
+  right -12px;
+  bottom -12px;
+  width 88px;
+  opacity 0.10.
+
+2. Form area:
+- margin-top 16px.
+- display flex column gap 16.
+
+3. Comment card:
+- premium-card-sm;
+- title row:
+  h3 “Комментарий”
+  small optional “необязательно”
+- textarea:
+  placeholder “Что сделано?”
+  min-height 104px;
+  background #FFFDF8;
+  border #E8DED0;
+  border-radius 22px;
+- help text muted:
+  “Можно коротко описать выполнение.”
+
+4. Text proof card:
+- premium-card-sm;
+- h3 “Текстовое доказательство”
+- small “необязательно”
+- textarea placeholder “Заметка для проверки”
+- same style.
+
+5. Video recorder card:
+- premium-card;
+- padding 18px;
+- border-radius 30px;
+- h3 “Снять видео сейчас”
+- required star red/gold рядом.
+- description:
+  “Галерея отключена — только запись с камеры. Нужно 1 видео.”
+  color muted;
+  line-height 1.45;
+  margin-top 6px.
+
+Camera preview area:
+- margin-top 16px;
+- width 100%;
+- aspect-ratio: 1 / 1 или 4 / 3 depending current camera.
+- border-radius 28px;
+- background:
+  linear-gradient(145deg, #17352A, #0B3D2E) если камера выключена,
+  или video stream.
+- overflow hidden;
+- display flex center;
+- position relative.
+Если камера выключена:
+  - center icon camera или CSS circle;
+  - text:
+    “Нажми «Начать съемку», чтобы включить камеру”
+    color white/cream;
+    max-width 240px;
+    text-align center.
+  - добавить маленькую glow border emerald.
+Если камера включена:
+  - video должен object-fit cover;
+  - border-radius 28px.
+
+Camera buttons row:
+- margin-top 14px;
+- display grid;
+- grid-template-columns 1fr 1fr;
+- gap 12px.
+Button “Начать съемку”:
+- primary.
+Button “Выключить камеру”:
+- secondary.
+Если recording active:
+- Start button becomes “Идет запись…” or current text logic.
+- Не ломать existing state.
+
+Recorded files list:
+Если есть записанные видео:
+- margin-top 16px;
+- title “Записано: 1/1”
+- video preview card:
+  - background #FFFDF8;
+  - border #E8DED0;
+  - border-radius 24px;
+  - padding 12px;
+  - video preview aspect ratio 16/9 или current;
+  - play button overlay;
+  - delete button red soft in top right.
+- Текст “Видео 1 · 2.6с” сделать красивым.
+
+6. Supabase help text:
+Под recorder:
+- small row with check icon:
+  “Файлы сохраняются в Supabase Storage.”
+- color #0F6B4A;
+- background #E8F5EE;
+- border-radius 16px;
+- padding 12px 14px.
+
+7. Submit button:
+- Внизу формы, перед bottom nav:
+- height 58px;
+- border-radius 20px;
+- emerald gradient;
+- text “Отправить на проверку”.
+- margin-top 18px;
+- margin-bottom 18px.
+- Если disabled/loading, показать shimmer/loading.
+- Не делай fixed button, если он перекрывает nav. Лучше обычный sticky только если уже есть safe-area logic.
+
+8. Success/error states:
+- Ошибки показывать в red soft card:
+  background danger-soft;
+  color danger;
+  border #F5C8C8;
+  border-radius 18px;
+  padding 12px.
+- Loading отправки:
+  button text “Отправляем…”
+
+9. Проверить:
+- Камера включается;
+- Видео записывается;
+- Удаление видео работает;
+- Отправка работает;
+- После отправки redirect/notification работает как раньше.
+ЭТАП 7. Магазин
+
+Сделать как витрину наград, а не список.
+
+Промпт
+Переделай только пользовательскую страницу Магазин Barboss.
+
+Не меняй логику покупки, проверку баланса, списание райданчиков, уведомления, API. Меняй только UI.
+
+Цель:
+Магазин должен выглядеть как premium reward shop:
+- светлый фон;
+- hero с подарками/маскотами;
+- баланс как красивая карточка;
+- товары как reward cards;
+- прогресс накопления;
+- disabled состояние красивое, а не серое страшное.
+
+Использовать ассеты:
+- /assets/mascots/couple-shop.png
+- /assets/ui/gift-box.png
+- /assets/coins/coin.png
+- /assets/coins/coin-stack.png
+
+Точная структура:
+
+1. Shop hero:
+- premium-card;
+- min-height 220px;
+- border-radius 32px;
+- padding 20px;
+- background linear-gradient(145deg, #FFFFFF, #FFFDF8, #F2E4C6 160%);
+- position relative;
+- overflow hidden.
+Внутри:
+- small pill “Магазин”
+- h1 “Награды за райданчики”
+  font-size 29px;
+  max-width 220px.
+- subtitle:
+  “Копи райданчики и выбирай приятные бонусы.”
+  muted;
+  max-width 210px.
+- image couple-shop or gift-box:
+  position absolute;
+  right -18px;
+  bottom -8px;
+  width 190-220px.
+Если couple-shop слишком большой, use gift-box 120px and coin-stack.
+- small sparkle/coin decor.
+
+2. Balance card:
+Под hero:
+- margin-top 16px;
+- card emerald gradient:
+  height 118px;
+  border-radius 30px;
+  padding 18px;
+  display flex;
+  align-items center;
+  justify-content space-between.
+Left:
+  label “Баланс”
+  value “0 райданчиков” or actual.
+  value font-size 30px.
+Right:
+  coin-stack 72px or coin 58px.
+Text white/cream.
+
+3. Shop section header:
+- margin-top 20px;
+- row:
+  h2 “Товары”
+  small count товаров.
+- subtitle muted:
+  “Выбирай награду, когда накопишь достаточно.”
+
+4. Product cards:
+Каждый товар card:
+- background white;
+- border #E8DED0;
+- border-radius 28px;
+- padding 18px;
+- margin-top 12px;
+- box-shadow soft.
+Верх:
+- icon circle 48x48:
+  use gift-box/coin or simple emoji/icon based on title:
+  Кино -> ticket icon;
+  Басик -> water icon;
+  Мак -> burger icon;
+  Суши -> sushi icon;
+  Дариджане -> restaurant icon.
+- рядом title:
+  font-size 21px;
+  font-weight 850.
+- price badge справа:
+  background #E8F5EE;
+  color green;
+  border-radius 999;
+  height 36;
+  padding 0 12.
+  text “220 райданчиков”.
+
+Description:
+- margin-top 10px;
+- color muted;
+- font-size 15px.
+
+Progress if balance < price:
+- needed = price - balance.
+- margin-top 14px.
+- label row:
+  “Накоплено”
+  “0 / 220”
+- progress bar:
+  height 9px;
+  background #F4EFE7;
+  border-radius 999;
+  fill #0F6B4A width balance/price.
+- below small text:
+  “Осталось накопить 220 райданчиков”
+  color #8B6F47.
+
+Button:
+- margin-top 16px;
+- height 52px;
+- border-radius 18px;
+If balance >= price:
+  primary button text “Купить”
+If not:
+  disabled soft button text “Не хватает райданчиков”
+  But visually:
+  background #F4EFE7;
+  color #A4A69F;
+  border none.
+Не использовать ярко-белый disabled button как сейчас.
+
+5. Purchased/success feedback:
+Если есть после покупки toast/success:
+- сделать green soft toast:
+  “Покупка успешна”
+  “Админ получил уведомление.”
+- Не менять existing logic.
+
+6. Empty state:
+Если товаров нет:
+- premium-card centered;
+- gift-box 96px;
+- title “Магазин пока пуст”
+- description “Скоро появятся награды.”
+
+7. Проверить:
+- Баланс показывается;
+- Disabled когда не хватает;
+- Купить работает когда хватает;
+- Уведомление и списание не ломаются.
+ЭТАП 8. Чат
+
+Нужен premium messenger.
+
+Промпт
+Переделай только пользовательский чат Barboss.
+
+Не меняй backend сообщений, загрузку файлов, голосовые, видео-кружочки, Supabase Storage, polling/realtime, историю без удаления. Меняй только UI и визуальное расположение.
+
+Цель:
+Чат должен выглядеть как светлый premium messenger:
+- светлый cream фон;
+- красивые bubble-сообщения;
+- admin слева, пользователь справа;
+- видео-кружочки аккуратные;
+- голосовые как audio pill;
+- input снизу как белая rounded панель;
+- ощущение дорогого приложения, а не технического лога.
+
+Использовать ассеты:
+- /assets/mascots/couple-chat.png
+- /assets/mascots/male-neutral.png
+- /assets/mascots/female-neutral.png
+- /assets/ui/heart-easter.png
+
+Точная структура:
+
+1. Chat page wrapper:
+- height should fit screen with bottom nav.
+- display flex column.
+- padding horizontal может быть 0 внутри, но content 20px.
+- background transparent.
+
+2. Chat intro/header card:
+Сверху под app header:
+- premium-card;
+- border-radius 30px;
+- padding 16px;
+- min-height 108px;
+- display flex;
+- align-items center;
+- gap 12px.
+Left:
+  mascot/couple-chat image 86x86 object contain.
+Right:
+  h2 “Чат”
+  subtitle “Сообщения сохраняются без удаления”
+  secure badge:
+    icon lock;
+    text “История защищена”
+    height 28px;
+    background #E8F5EE;
+    color #0F6B4A.
+Если картинка нет, показать round icon.
+
+3. Messages area:
+- margin-top 14px;
+- height или min-height:
+  calc(100dvh - header - input - nav) если удобно.
+- Но не ломай current scroll. 
+- Лучше: messages container flex: 1; overflow-y auto.
+- padding-bottom 12px.
+- gap между сообщениями 10-12px.
+
+4. Message grouping:
+Для каждого сообщения:
+- Если sender is current user:
+  align-self flex-end;
+  max-width 78%;
+  bubble background:
+    linear-gradient(135deg, #0F6B4A, #18A66A)
+    или #E8F5EE если хочешь мягко;
+  color:
+    white для accent bubble или #17352A для soft.
+  border-radius:
+    22px 22px 6px 22px.
+- Если admin:
+  align-self flex-start;
+  max-width 78%;
+  bubble background white;
+  color #17352A;
+  border 1px solid #E8DED0;
+  border-radius:
+    22px 22px 22px 6px.
+  box-shadow soft.
+
+5. Sender label:
+- Убрать грубый @ADMIN большим текстом.
+- Показывать маленький label:
+  “Админ” или “Ты”
+  font-size 12;
+  font-weight 800;
+  color green/muted.
+- Для admin можно маленький circular avatar 28x28 слева от первого сообщения:
+  male-neutral cropped or letter A.
+- Для пользователя можно avatar справа, но не обязательно.
+
+6. Text message:
+Внутри bubble:
+- text font-size 15.5;
+- line-height 1.4.
+- time:
+  font-size 11;
+  opacity 0.70;
+  margin-top 6;
+  align right.
+- Не показывать технические поля.
+
+7. Video circle:
+Если message type video/circle:
+- bubble padding 8 или 10.
+- video preview:
+  width 132px;
+  height 132px;
+  border-radius 999px;
+  object-fit cover;
+  background #0B3D2E;
+  overflow hidden;
+  position relative.
+- play overlay:
+  center 42x42;
+  background rgba(255,255,255,0.85);
+  icon green.
+- duration/date below small.
+- Если видео не круглое, все равно обернуть в circle mask.
+
+8. Voice/audio:
+- bubble as audio pill:
+  min-width 190px;
+  height 54px;
+  display flex align center gap 10.
+- play button 36x36 circle.
+- waveform fake bars or actual audio controls if existing.
+- text “Голосовое”
+- time small.
+- Не использовать просто emoji microphone and text.
+
+9. Image:
+- rounded 18px;
+- max-width 220px;
+- object-fit cover;
+- border #E8DED0.
+
+10. Input area:
+Фиксировать над bottom nav или оставить в потоке, но он должен быть удобно снизу.
+- position sticky;
+- bottom: calc(92px + env(safe-area-inset-bottom));
+- margin-top 12px;
+- background rgba(248,245,239,0.85);
+- backdrop-filter blur(14px);
+- padding 10px 0 6px.
+Input row:
+- display flex;
+- gap 10;
+- align-items center.
+Attachment button:
+- 48x48;
+- border-radius 999;
+- background white;
+- border #E8DED0;
+- icon #0F6B4A.
+Text input:
+- flex 1;
+- height 52px;
+- border-radius 999;
+- background white;
+- border #E8DED0;
+- padding 0 16px;
+- placeholder “Сообщение...”.
+Camera button:
+- 48x48 white circle.
+Send button:
+- 52x52;
+- border-radius 999;
+- background emerald gradient;
+- icon white.
+- disabled if empty/no file should be soft.
+
+11. Empty chat:
+If no messages:
+- centered premium-card;
+- couple-chat 120px;
+- title “Начните общение”
+- description “Сообщения будут храниться без удаления.”
+- quick hint “Можно отправить текст, фото, видео или голосовое.”
+
+12. Scroll:
+- При загрузке страницы прокручивать к последнему сообщению если уже есть логика.
+- Не ломать.
+
+13. Проверить:
+- text send works;
+- voice works;
+- video works;
+- photo works;
+- chat refresh works;
+- bottom nav не перекрывает input.
+ЭТАП 9. История
+Промпт
+Переделай только пользовательскую страницу История Barboss.
+
+Не меняй данные истории, API, фильтрацию и правила “записи не удаляются”. Меняй только UI и человекочитаемое отображение.
+
+Цель:
+История должна выглядеть как premium timeline:
+- светлый фон;
+- hero/intro card;
+- фильтры как pill tabs;
+- события как красивые timeline rows;
+- статусы понятные;
+- технические типы не показывать.
+
+Использовать ассеты:
+- /assets/coins/coin.png
+- /assets/ui/empty-state.png
+- /assets/ui/sparkle.png
+
+Точная структура:
+
+1. Intro card:
+Под header:
+- premium-card;
+- border-radius 30px;
+- padding 20px.
+Внутри:
+- small pill “История”
+- h1 “Все действия”
+  font-size 28px.
+- description:
+  “Задания, покупки, начисления, списания и бонусы сохраняются здесь.”
+- справа или снизу маленький icon/empty-state decoration 72px optional.
+- Убрать сухой текст “Записи не удаляются” или сделать его как маленький secure note:
+  “История сохраняется без удаления.”
+
+2. Filter tabs:
+- margin-top 16px;
+- horizontal scroll;
+- gap 8.
+Tabs:
+Все, Задания, Магазин, Начисления, Штрафы.
+Style:
+- active: emerald background, white text.
+- inactive: white background, border #E8DED0, text #17352A.
+- height 42px;
+- padding 0 16;
+- border-radius 999.
+
+3. Events card:
+- margin-top 16px;
+- premium-card;
+- padding 8px или 12px;
+- h2 “События” inside top with count.
+Но лучше события внутри без огромной темной карточки.
+
+4. Timeline event row:
+Каждое событие:
+- display flex;
+- gap 12px;
+- padding 14px 8px;
+- border-bottom 1px solid #F1E8DC except last.
+Left icon circle:
+- 42x42;
+- border-radius 999;
+- background depending type:
+  approved/success: #E8F5EE;
+  rejected: #FBEAEA;
+  shop: #FFF4D8;
+  penalty: #FBEAEA.
+- icon:
+  task: check/clipboard;
+  rejected: x;
+  shop: bag;
+  reward: coin;
+  penalty: minus.
+Center:
+- title:
+  human-friendly title:
+  task name or purchase name.
+  font-size 16;
+  font-weight 800;
+- subtitle:
+  formatted date like “18 мая, 19:32”
+  color muted;
+  font-size 13.
+- optional description/comment if exists.
+Right:
+- amount:
+  +8, -10, or —
+  green for positive, red for negative, muted for none.
+- status badge below or next to amount:
+  “Принято”, “Отклонено”, “На проверке”, “Покупка”, “Штраф”.
+For mobile 375:
+- if right column too tight, place status badge under title instead.
+
+5. Human-readable mapping:
+Implement helper function or display mapping:
+- rejected -> Отклонено
+- approved -> Принято
+- pending -> На проверке
+- shop_purchase -> Покупка
+- task_reward -> Начисление
+- penalty -> Штраф
+- easter_bonus -> Сердечко
+- manual_adjustment -> Корректировка
+- chat_message should usually not appear in history; if appears, display “Сообщение”, not technical.
+
+6. Empty state:
+- if no events:
+  centered card:
+  image empty-state 100px
+  title “История пока пустая”
+  desc “После заданий, покупок и бонусов здесь появятся события.”
+  button “К заданиям”
+
+7. Не показывать:
+- raw type names;
+- underscores;
+- database ids;
+- technical source_id.
+
+8. Проверить:
+- фильтры работают;
+- события отображаются;
+- bottom nav не перекрывает последние rows.
+ЭТАП 10. Уведомления
+Промпт
+Переделай только страницу уведомлений Barboss.
+
+Не меняй данные уведомлений, mark as read, unread count, links. Меняй UI и отображаемый текст.
+
+Цель:
+Уведомления должны выглядеть как premium notification center:
+- светлый фон;
+- summary card;
+- красивые notification cards;
+- readable human text;
+- no technical names.
+
+Использовать ассеты:
+- /assets/ui/empty-state.png
+- /assets/ui/gift-box.png
+- /assets/coins/coin.png
+- /assets/ui/heart-easter.png
+
+Точная структура:
+
+1. Summary card:
+Под header:
+- premium-card;
+- padding 20px;
+- border-radius 30px.
+Внутри:
+- small pill “Уведомления”
+- h1 “Центр событий”
+- subtitle “Здесь появляются сообщения, проверки и покупки.”
+- stats row:
+  two mini cards:
+  1. “Всего” number
+  2. “Непрочитанных” number
+- stats mini cards:
+  background #FFFDF8;
+  border #E8DED0;
+  border-radius 20px;
+  padding 14px.
+
+2. Notification list:
+- margin-top 16px;
+- display flex column gap 12px.
+
+3. Notification card:
+- background white;
+- border 1px solid #E8DED0;
+- border-radius 24px;
+- padding 16px;
+- box-shadow soft.
+- display flex gap 12.
+Left icon:
+- 44x44 circle.
+- type-based:
+  chat -> chat icon, green soft;
+  voice -> mic icon;
+  task approved -> check green;
+  task rejected -> x red;
+  purchase -> gift/bag gold;
+  reward -> coin;
+  error -> red warning.
+Center:
+- title human readable:
+  raw “Сообщение от админа” ok, but better mapping:
+  chat_message -> “Новое сообщение”
+  voice chat message -> “Голосовое сообщение”
+  task_approved -> “Задание принято”
+  task_rejected -> “Задание отклонено”
+  shop_purchase -> “Покупка”
+  wallet_transaction -> “Райданчики обновлены”
+- message:
+  If text exists, show it.
+  If raw message “🎤 Голосовое”, display “Админ отправил голосовое сообщение.”
+- date:
+  format “18 мая, 20:29”
+  color muted.
+Right:
+- unread dot if !isRead:
+  10x10 emerald or red.
+- Optional chevron.
+
+4. Remove technical text:
+Не показывать:
+- chat_message
+- task_submission
+- shop_purchase raw
+- underscores
+- ids.
+Если сейчас дата строка выглядит “18.05, 20:29 · chat_message”, заменить на:
+  “18 мая, 20:29”
+и тип показать через красивый title/icon.
+
+5. Empty state:
+- premium-card center
+- image empty-state
+- title “Пока нет уведомлений”
+- description “Когда появятся сообщения или проверки, они будут здесь.”
+
+6. Mark read:
+Если есть кнопка/действие mark as read, оформить:
+- small ghost button “Отметить прочитанным”
+- или карточка кликабельная.
+Не ломать функцию.
+
+7. Проверить:
+- unread count в header все еще работает;
+- уведомления отображаются;
+- mark read работает.
+ЭТАП 11. 404, loading, empty states, toast
+Промпт
+Переделай 404/error/loading/empty states проекта Barboss в premium light style.
+
+Не меняй error logging, если он есть. Не ломай routes.
+
+Цель:
+Все вспомогательные состояния должны быть красивыми и похожими на Barboss visual system.
+
+Использовать ассеты:
+- /assets/ui/error-404.png
+- /assets/ui/heart-easter.png
+- /assets/ui/empty-state.png
+- /assets/ui/loading-ring.png
+- /assets/mascots/female-thinking.png
+
+1. 404 page:
+- full mobile page max-width 430px;
+- background cream;
+- center content vertically;
+- padding 24px.
+Внутри:
+- image error-404 or heart-easter 160px.
+- h1 “Страница потерялась”
+- subtitle “Но райданчики на месте.”
+- description “Вернись на главную и продолжи собирать награды.”
+- primary button “На главную”
+- optional secondary “Назад”.
+Style:
+- white card, border-radius 32px, soft shadow.
+
+2. Global error state:
+If error boundary exists:
+- show premium card.
+- h1 “Что-то пошло не так”
+- desc “Мы уже сохранили ошибку в логах.”
+- button “Обновить”
+- button “На главную”
+- Do not show stack trace to user.
+
+3. Loading state:
+Создать reusable LoadingScreen:
+- cream background;
+- center loading-ring or CSS sparkle ring;
+- text “Загружаем Barboss…”
+- small muted “Проверяем райданчики”
+Animation:
+- soft pulse/float.
+
+4. Skeleton:
+- card skeletons:
+  background linear-gradient 90deg #F4EFE7, #FFFDF8, #F4EFE7;
+  border-radius 24px;
+  shimmer animation.
+- Use for task cards, shop cards, history rows.
+
+5. EmptyState component:
+Props:
+- image
+- title
+- description
+- actionLabel
+- actionHref/onClick.
+Style:
+- premium-card;
+- text-align center;
+- image 110px;
+- h3 20px;
+- p muted;
+- optional button.
+
+6. Toast:
+If toast system exists, restyle:
+- position top center or bottom above nav;
+- max-width calc(100% - 32px), max 398px;
+- border-radius 20px;
+- background white;
+- border #E8DED0;
+- shadow;
+- success icon green, error red, info gold.
+- text readable.
+
+7. Проверить:
+- 404 работает;
+- loading не темный;
+- empty states не выглядят технически.
+ЭТАП 12. Пасхалка-сердечко
+
+Если у тебя уже есть логика, здесь только дизайн. Если нет, попросить аккуратно добавить.
+
+Промпт
+Переделай или добавь визуал ежедневной пасхалки с летающим сердечком.
+
+Не ломай баланс и WalletTransaction. Если backend логика уже есть, используй ее. Если нет, добавь минимально и безопасно через существующие API patterns.
+
+Цель:
+Один раз в день у пользователя появляется маленькое красивое сердечко. Если нажать, начисляется +2 райданчика.
+
+Визуал:
+- использовать /assets/ui/heart-easter.png если есть.
+- Размер сердечка 46x46.
+- position fixed внутри mobile viewport.
+- z-index выше контента, но ниже модальных окон.
+- Сердечко плавно двигается:
+  animation float 5s ease-in-out infinite;
+  плюс random position каждые 8-12 секунд если уже удобно.
+- Оно не должно перекрывать input чата и bottom nav:
+  safe area:
+  top минимум 120px;
+  bottom минимум 130px;
+  left/right 24px.
+
+Клик:
+- on click:
+  - вызвать server action/API для claim daily heart bonus.
+  - сервер должен проверить, что бонус сегодня еще не получен.
+  - создать WalletTransaction:
+    type easter_bonus
+    amount 2
+    description “Поймано летающее сердечко”
+  - создать notification.
+  - создать log.
+- UI после клика:
+  - сердечко исчезает с pop animation;
+  - появляется floating text “+2 райданчика”;
+  - toast “Сердечко поймано! +2 райданчика”.
+- Если уже получено сегодня:
+  - не показывать сердечко;
+  - если API вернул already claimed, показать soft info toast.
+
+Дизайн floating reward:
+- text bubble:
+  background white;
+  border #E8DED0;
+  color green;
+  border-radius 999;
+  padding 8px 12px;
+  font-weight 850;
+  box-shadow soft;
+  coin icon optional.
+
+Проверить:
+- Нельзя получить больше 1 раза в день.
+- Баланс обновляется.
+- История показывает easter bonus как “Сердечко”.
+ЭТАП 13. Финальный polish “чтобы было максимально как картинка”
+
+Это уже после всех страниц.
+
+Промпт
+Сделай финальный visual polish пользовательской части Barboss.
+
+Не меняй бизнес-логику. Не переписывай архитектуру. Только UI polish, consistency и micro-interactions.
+
+Цель:
+Довести дизайн до единого premium Barboss style, похожего на предоставленные концепты:
+- светлый cream background;
+- emerald/gold accents;
+- white cards;
+- маскоты;
+- монеты;
+- мягкие анимации;
+- дорогой мобильный интерфейс.
+
+Проверь все пользовательские страницы:
+- Login
+- Главная
+- Задания
+- Отправка задания
+- Магазин
+- Чат
+- История
+- Уведомления
+- 404/error/loading
+
+Что сделать:
+
+1. Consistency:
+- Все карточки имеют border-radius 24-32px.
+- Все главные кнопки height 52-58px.
+- Все page paddings 20px.
+- Все секции имеют margin-top 16-20px.
+- Все muted тексты одинакового цвета.
+- Все reward badges одинаковые.
+- Все status badges одинаковые.
+
+2. Typography:
+- Page titles 28-30px, weight 850.
+- Section titles 20-22px, weight 800.
+- Card titles 18-21px, weight 800.
+- Body 15-16px.
+- Small labels 12-13px.
+
+3. Shadows:
+- Убрать грязные сильные тени.
+- Использовать мягкие shadows только на карточках и nav.
+- Не делать черные тени с opacity больше 0.16.
+
+4. Mascots:
+- Маскоты не должны перекрывать важный текст.
+- На 375px изображения уменьшать.
+- Если asset не найден, fallback не должен ломать layout.
+- Hero images object-fit contain.
+
+5. Bottom navigation:
+- Не перекрывает input чата.
+- Не перекрывает последний товар/историю.
+- Safe-area работает.
+
+6. Chat:
+- Последнее сообщение не должно уходить под input.
+- Input не должен уходить под bottom nav.
+- Видео-кружки должны быть круглыми.
+- Voice messages должны быть аккуратными.
+
+7. Forms:
+- Inputs readable.
+- Focus visible.
+- Ошибки в soft red cards.
+- Loading states readable.
+
+8. Empty states:
+- Не оставлять пустые темные блоки.
+- Везде есть friendly empty state.
+
+9. Remove technical text:
+Проверь, что пользователю не показываются:
+- chat_message
+- task_submission
+- wallet_transaction
+- source_id
+- entity_id
+- raw database ids
+- underscores.
+Заменить на нормальные русские тексты.
+
+10. Animations:
+Добавить subtle animations:
+- page content fade-up;
+- cards fade-up;
+- buttons active scale;
+- hero mascot float;
+- reward badge small pop on appearance;
+- skeleton shimmer.
+Но не переборщить, чтобы не лагало на телефоне.
+
+11. Accessibility:
+- contrast normal;
+- buttons have accessible labels;
+- tap targets минимум 44px;
+- text не меньше 12px.
+
+12. Final check:
+- запустить build;
+- проверить на ширине 375px, 390px, 430px;
+- проверить все пользовательские routes;
+- написать список измененных файлов и что именно улучшено.
+Самый безопасный порядок для тебя
+
+Дай Cursor не весь огромный редизайн сразу, а вот так:
+
+1. Этап 1 — дизайн-система
+2. Этап 2 — Login
+3. Этап 3 — общий user layout
+4. Этап 4 — Главная
+5. Этап 5 — Задания
+6. Этап 6 — Отправка задания
+7. Этап 7 — Магазин
+8. Этап 8 — Чат
+9. Этап 9 — История
+10. Этап 10 — Уведомления
+11. Этап 11 — 404/loading/empty
+12. Этап 12 — сердечко
+13. Этап 13 — polish
+Самое важное сообщение перед каждым этапом
+
+Перед каждым промптом можешь добавлять:
+
+Очень важно: не переписывай проект заново. Не трогай backend, database schema, auth, storage, chat logic и API. Работай только с UI текущих страниц и компонентов. Если нужно изменить компонент, сохрани его props и поведение.
+
+Так шанс, что Cursor сломает проект, будет намного меньше.

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  BarChart3,
   ClipboardCheck,
   ClipboardList,
   FileText,
@@ -35,6 +36,7 @@ const adminNav: NavItem[] = [
   { href: "/admin/review", label: "Проверка", icon: ClipboardCheck },
   { href: "/admin/tasks", label: "Задания", icon: ClipboardList },
   { href: "/admin/shop", label: "Магазин", icon: Store },
+  { href: "/admin/reports", label: "Отчёты", icon: BarChart3 },
   { href: "/admin/logs", label: "Логи", icon: FileText },
   { href: "/admin/chat", label: "Чат", icon: MessageCircle },
 ];
@@ -48,11 +50,11 @@ export function BottomNav({ role }: { role: Role }) {
   const items = role === "admin" ? adminNav : participantNav;
 
   return (
-    <nav className="sticky bottom-0 border-t border-neutral-200 bg-white/95 px-2 py-2 backdrop-blur">
-      <div
-        className="grid min-h-14 gap-1"
-        style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
-      >
+    <nav
+      aria-label="Основная навигация"
+      className="fixed bottom-[calc(12px+env(safe-area-inset-bottom))] left-1/2 z-50 w-[calc(100%-32px)] max-w-[398px] -translate-x-1/2"
+    >
+      <div className="flex h-[74px] items-center justify-around rounded-full border border-[rgba(232,222,208,0.95)] bg-white/90 p-2 shadow-[0_18px_44px_rgba(23,53,42,0.16)] backdrop-blur-[18px]">
         {items.map((item) => {
           const Icon = item.icon;
           const isActive = isActivePath(pathname, item.href);
@@ -61,14 +63,16 @@ export function BottomNav({ role }: { role: Role }) {
             <Link
               aria-current={isActive ? "page" : undefined}
               className={[
-                "flex min-w-0 flex-col items-center justify-center gap-1 rounded-[8px] px-1 py-2 text-[11px] font-medium transition",
-                isActive ? "bg-emerald-50 text-emerald-800" : "text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900",
+                "flex h-[58px] min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-full px-1 text-[11px] font-semibold transition duration-[180ms] ease-out active:scale-[0.97]",
+                isActive
+                  ? "bg-emerald-50 text-emerald-800"
+                  : "text-neutral-500 hover:bg-[#FBF7EF] hover:text-neutral-900",
               ].join(" ")}
               href={item.href}
               key={item.href}
               title={item.label}
             >
-              <Icon aria-hidden="true" className="h-5 w-5 shrink-0" strokeWidth={2} />
+              <Icon aria-hidden="true" className="h-6 w-6 shrink-0" strokeWidth={isActive ? 2.4 : 2} />
               <span className="max-w-full truncate">{item.label}</span>
             </Link>
           );

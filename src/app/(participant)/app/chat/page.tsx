@@ -1,9 +1,17 @@
-import { SectionPanel } from "@/components/section-panel";
+import { ChatView } from "@/components/chat-view";
+import { requireRole } from "@/lib/auth";
+import { listChatMessages } from "@/lib/chat-messages";
 
-export default function ParticipantChatPage() {
+export default async function AppChatPage() {
+  const user = await requireRole("participant");
+  const messages = await listChatMessages({ limit: 200 });
+
   return (
-    <SectionPanel eyebrow="Чат" title="Раздел чата">
-      Здесь появится общение.
-    </SectionPanel>
+    <ChatView
+      currentUserId={user.id}
+      currentUserRole={user.role}
+      currentUsername={user.username}
+      initialMessages={messages}
+    />
   );
 }

@@ -1,8 +1,11 @@
+import { TaskSubmissionForm } from "@/components/task-submission-form";
+import { EmptyState } from "@/components/empty-state";
+import { RewardFloat } from "@/components/reward-float";
 import { SectionPanel } from "@/components/section-panel";
 import { formatReward } from "@/lib/format";
 import { getDb } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
-import { submitTaskAction } from "@/app/(participant)/app/tasks/actions";
+import { getStorageDriver, isStorageConfigured } from "@/lib/storage";
 
 type TasksPageProps = {
   searchParams: Promise<{
@@ -43,6 +46,8 @@ function sortCategories(a: string, b: string) {
 export default async function ParticipantTasksPage({ searchParams }: TasksPageProps) {
   const user = await requireRole("participant");
   const params = await searchParams;
+  const storageConfigured = isStorageConfigured();
+  const storageDriver = getStorageDriver();
 
   const [tasks, pendingSubmissions] = await Promise.all([
     getDb().task.findMany({
@@ -70,16 +75,16 @@ export default async function ParticipantTasksPage({ searchParams }: TasksPagePr
 
   return (
     <div className="space-y-4">
-      {params.submitted ? (
-        <p className="rounded-[8px] border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-          Отправлено на проверку.
+      {params.error ? (
+        <p className="rounded-[8px] border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {params.error === "video_required"
+            ? "Для задания нужно прикрепить видео."
+            : "Не удалось отправить задание. Попробуй еще раз."}
         </p>
       ) : null}
 
-      {params.error ? (
-        <p className="rounded-[8px] border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          Не удалось отправить задание. Попробуй еще раз.
-        </p>
+      {categories.length === 0 ? (
+        <EmptyState title="Нет заданий" description="Когда появятся новые задания, они будут здесь." />
       ) : null}
 
       {categories.map((category) => (
@@ -89,7 +94,8 @@ export default async function ParticipantTasksPage({ searchParams }: TasksPagePr
               const isPending = pendingTaskIds.has(task.id);
 
               return (
-                <article className="rounded-[8px] border border-neutral-200 p-3" key={task.id}>
+                <article className="relative rounded-[8px] border border-neutral-200 p-3" key={task.id}>
+                  <RewardFloat amount={task.reward} />
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <h3 className="text-base font-semibold text-neutral-950">{task.title}</h3>
@@ -108,7 +114,7 @@ export default async function ParticipantTasksPage({ searchParams }: TasksPagePr
                   <div className="mt-3 flex flex-wrap gap-2 text-xs text-neutral-500">
                     {task.isDaily ? <span className="rounded-[8px] bg-neutral-100 px-2 py-1">ежедневное</span> : null}
                     {task.isPenalty ? <span className="rounded-[8px] bg-red-50 px-2 py-1 text-red-700">штраф</span> : null}
-                    <span className="rounded-[8px] bg-neutral-100 px-2 py-1">proof: {task.proofType}</span>
+                    <span className="rounded-[8px] bg-violet-50 px-2 py-1 text-violet-800">видео</span>
                   </div>
 
                   {isPending ? (
@@ -121,44 +127,13 @@ export default async function ParticipantTasksPage({ searchParams }: TasksPagePr
                         Отправить на проверку
                       </summary>
 
-                      <form action={submitTaskAction} className="mt-3 space-y-3 rounded-[8px] bg-neutral-50 p-3">
-                        <input name="taskId" type="hidden" value={task.id} />
-
-                        <label className="block">
-                          <span className="text-sm font-medium text-neutral-700">Комментарий</span>
-                          <textarea
-                            className="mt-2 min-h-20 w-full rounded-[8px] border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-                            name="comment"
-                            placeholder="Что сделано?"
-                          />
-                        </label>
-
-                        <label className="block">
-                          <span className="text-sm font-medium text-neutral-700">Текстовое доказательство</span>
-                          <textarea
-                            className="mt-2 min-h-20 w-full rounded-[8px] border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-                            name="proofText"
-                            placeholder="Ссылка, описание или заметка для проверки"
-                          />
-                        </label>
-
-                        <label className="block">
-                          <span className="text-sm font-medium text-neutral-700">Файлы</span>
-                          <input
-                            className="mt-2 w-full rounded-[8px] border border-dashed border-neutral-300 bg-white px-3 py-3 text-sm text-neutral-500"
-                            disabled
-                            type="file"
-                          />
-                          <span className="mt-1 block text-xs text-neutral-500">Загрузка файлов появится позже.</span>
-                        </label>
-
-                        <button
-                          className="h-11 w-full rounded-[8px] bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800"
-                          type="submit"
-                        >
-                          Отправить
-                        </button>
-                      </form>
+                      <TaskSubmissionForm
+                        proofType={task.proofType}
+                        storageConfigured={storageConfigured}
+                        storageDriver={storageDriver}
+                        taskId={task.id}
+                        taskTitle={task.title}
+                      />
                     </details>
                   )}
                 </article>

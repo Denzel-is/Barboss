@@ -69,8 +69,15 @@ if (urls.shadowDatabaseUrl) {
   envContent = upsertEnvValue(envContent, "SHADOW_DATABASE_URL", urls.shadowDatabaseUrl);
 }
 
-if (!/^SESSION_SECRET=.+$/m.test(envContent)) {
-  envContent = upsertEnvValue(envContent, "SESSION_SECRET", "local-development-session-secret");
+const sessionSecretMatch = envContent.match(/^SESSION_SECRET="?(.*?)"?$/m);
+const sessionSecret = sessionSecretMatch?.[1] ?? "";
+
+if (!sessionSecret || sessionSecret.length < 16 || sessionSecret.includes("replace-with")) {
+  envContent = upsertEnvValue(
+    envContent,
+    "SESSION_SECRET",
+    "barboss-local-dev-session-secret-32",
+  );
 }
 
 writeFileSync(envPath, envContent);

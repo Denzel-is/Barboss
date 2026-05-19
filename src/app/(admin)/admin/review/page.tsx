@@ -1,3 +1,6 @@
+import { SubmissionFiles } from "@/components/submission-files";
+import { EmptyState } from "@/components/empty-state";
+import { RewardFloat } from "@/components/reward-float";
 import { SectionPanel } from "@/components/section-panel";
 import { formatReward } from "@/lib/format";
 import { getDb } from "@/lib/db";
@@ -35,12 +38,6 @@ export default async function AdminReviewPage({ searchParams }: AdminReviewPageP
 
   return (
     <div className="space-y-4">
-      {params.reviewed ? (
-        <p className="rounded-[8px] border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-          Решение сохранено.
-        </p>
-      ) : null}
-
       {params.error ? (
         <p className="rounded-[8px] border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           Отправку не удалось обработать.
@@ -49,11 +46,12 @@ export default async function AdminReviewPage({ searchParams }: AdminReviewPageP
 
       <SectionPanel eyebrow="Проверка" title={`Ожидают проверки: ${submissions.length}`}>
         {submissions.length === 0 ? (
-          <p>Очередь проверки пустая.</p>
+          <EmptyState title="Нет заданий на проверку" description="Очередь чистая. Новые отправки появятся здесь." />
         ) : (
           <div className="space-y-3">
             {submissions.map((submission) => (
-              <article className="rounded-[8px] border border-neutral-200 p-3" key={submission.id}>
+              <article className="relative rounded-[8px] border border-neutral-200 p-3" key={submission.id}>
+                <RewardFloat amount={submission.task.reward} />
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-xs font-medium text-neutral-500">@{submission.user.username}</p>
@@ -82,6 +80,7 @@ export default async function AdminReviewPage({ searchParams }: AdminReviewPageP
                   <p className="text-xs text-neutral-500">
                     Отправлено: {dateFormatter.format(submission.createdAt)} · Файлов: {submission.files.length}
                   </p>
+                  <SubmissionFiles files={submission.files} taskTitle={submission.task.title} />
                 </div>
 
                 <form action={reviewSubmissionAction} className="mt-3 space-y-3">

@@ -7,6 +7,9 @@ import { getDb } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
 import { writeAuthLog } from "@/lib/logs";
 import { formatReward } from "@/lib/format";
+import { NOTIFICATION_TYPES, TOAST_KEYS } from "@/lib/notification-types";
+import { createNotification } from "@/lib/notifications";
+import { notifyParticipantTaskApproved, notifyParticipantTaskRejected } from "@/lib/telegram";
 
 function getFormString(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -73,15 +76,37 @@ export async function reviewSubmissionAction(formData: FormData) {
       });
     }
 
-    await tx.notification.create({
-      data: {
-        userId: submission.userId,
-        title: approved ? "Задание подтверждено" : "Задание отклонено",
-        body: approved
-          ? `${submission.task.title}: ${formatReward(submission.task.reward)}.`
-          : `${submission.task.title}: отправка отклонена.`,
-      },
-    });
+    if (approved) {
+      await createNotification(
+        {
+          userId: submission.userId,
+          title: "Задание принято",
+          message: `«${submission.task.title}»: ${formatReward(submission.task.reward)}.`,
+          type: NOTIFICATION_TYPES.taskApproved,
+        },
+        tx,
+      );
+
+      await createNotification(
+        {
+          userId: submission.userId,
+          title: "Райданчики начислены",
+          message: `${formatReward(submission.task.reward)} за «${submission.task.title}».`,
+          type: NOTIFICATION_TYPES.rewardCredited,
+        },
+        tx,
+      );
+    } else {
+      await createNotification(
+        {
+          userId: submission.userId,
+          title: "Задание отклонено",
+          message: `«${submission.task.title}» не принято.`,
+          type: NOTIFICATION_TYPES.taskRejected,
+        },
+        tx,
+      );
+    }
 
     return {
       approved,
@@ -104,9 +129,26 @@ export async function reviewSubmissionAction(formData: FormData) {
     userId: admin.id,
   });
 
+  if (result.approved) {
+    await notifyParticipantTaskApproved({
+      taskTitle: result.taskTitle,
+      reward: result.reward,
+      userId: result.participantId,
+    });
+  } else {
+    await notifyParticipantTaskRejected({
+      taskTitle: result.taskTitle,
+      userId: result.participantId,
+    });
+  }
+
   revalidatePath("/admin");
   revalidatePath("/admin/review");
+  revalidatePath("/admin/notifications");
   revalidatePath("/app");
   revalidatePath("/app/tasks");
-  redirect(`/admin/review?reviewed=${result.approved ? "approved" : "rejected"}`);
+  revalidatePath("/app/notifications");
+  redirect(
+    `/admin/review?toast=${result.approved ? TOAST_KEYS.taskApproved : TOAST_KEYS.taskRejected}`,
+  );
 }

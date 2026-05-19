@@ -1,47 +1,39 @@
+import { Suspense } from "react";
+
+import { AdminLogsNav } from "@/components/admin-logs-nav";
+import { AdminLogsTable } from "@/components/admin-logs-table";
+import { HistoryFilterChips } from "@/components/history-filter-chips";
 import { SectionPanel } from "@/components/section-panel";
-import { getDb } from "@/lib/db";
+import { listAdminLogs } from "@/lib/admin-logs";
+import { ADMIN_LOG_FILTER_OPTIONS, parseAdminLogFilter } from "@/lib/log-filters";
 
-const logFormatter = new Intl.DateTimeFormat("ru-RU", {
-  day: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-  month: "2-digit",
-});
+type AdminLogsPageProps = {
+  searchParams: Promise<{
+    filter?: string;
+  }>;
+};
 
-export default async function AdminLogsPage() {
-  const logs = await getDb().log.findMany({
-    include: {
-      user: {
-        select: {
-          username: true,
-          role: true,
-        },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 20,
-  });
+export default async function AdminLogsPage({ searchParams }: AdminLogsPageProps) {
+  const params = await searchParams;
+  const parsed = parseAdminLogFilter(params.filter);
+  const logs = await listAdminLogs({ level: parsed.level, status: parsed.status });
 
   return (
-    <SectionPanel eyebrow="Логи" title="Последние события">
-      {logs.length === 0 ? (
-        <p>Логов пока нет.</p>
-      ) : (
-        <ul className="divide-y divide-neutral-200">
-          {logs.map((log) => (
-            <li className="py-3" key={log.id}>
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-medium text-neutral-900">{log.action}</p>
-                <time className="shrink-0 text-xs text-neutral-500" dateTime={log.createdAt.toISOString()}>
-                  {logFormatter.format(log.createdAt)}
-                </time>
-              </div>
-              <p className="mt-1 text-neutral-600">{log.message ?? "Без описания"}</p>
-              <p className="mt-1 text-xs text-neutral-500">{log.user?.username ?? "unknown"}</p>
-            </li>
-          ))}
-        </ul>
-      )}
-    </SectionPanel>
+    <div className="space-y-4">
+      <SectionPanel eyebrow="Мониторинг" title="Логи системы">
+        <AdminLogsNav />
+        <p className="mt-3 text-sm text-neutral-500">
+          События приложения: level, actor, action, entity, metadata и статус обработки.
+        </p>
+      </SectionPanel>
+
+      <Suspense fallback={<p className="text-sm text-neutral-500">Загрузка фильтров…</p>}>
+        <HistoryFilterChips options={[...ADMIN_LOG_FILTER_OPTIONS]} paramName="filter" />
+      </Suspense>
+
+      <SectionPanel eyebrow="Записи" title={`Показано: ${logs.length}`}>
+        <AdminLogsTable logs={logs} />
+      </SectionPanel>
+    </div>
   );
 }

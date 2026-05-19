@@ -14,11 +14,20 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "storage:setup": "node scripts/configure-supabase-storage.mjs",
+    "storage:test": "node scripts/test-supabase-storage.mjs",
+    "db:migrate-notifications": "node scripts/migrate-notification-schema.mjs",
+    "db:migrate-chat": "node scripts/migrate-chat-schema.mjs",
+    "db:migrate-logs": "node scripts/migrate-logs-schema.mjs",
+    "telegram:discover": "node scripts/telegram-discover-chats.mjs",
+    "telegram:test": "node scripts/telegram-test.mjs"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1048.0",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "@supabase/supabase-js": "^2.106.0",
     "bcrypt": "^6.0.0",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
@@ -27,6 +36,7 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.15.11",
     "@tailwindcss/postcss": "^4",
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^20",

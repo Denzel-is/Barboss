@@ -36,7 +36,7 @@ function parseTaskForm(formData: FormData): TaskFormData | null {
   const title = getFormString(formData, "title");
   const description = getFormString(formData, "description");
   const category = getFormString(formData, "category");
-  const proofType = getFormString(formData, "proofType") || "text";
+  const proofType = getFormString(formData, "proofType") || "video";
   const reward = Number.parseInt(getFormString(formData, "reward"), 10);
 
   if (!title || !description || !category || Number.isNaN(reward)) {

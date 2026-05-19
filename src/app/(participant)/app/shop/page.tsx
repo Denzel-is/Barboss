@@ -1,4 +1,5 @@
 import { SectionPanel } from "@/components/section-panel";
+import { EmptyState } from "@/components/empty-state";
 import { buyShopItemAction } from "@/app/(participant)/app/shop/actions";
 import { requireRole } from "@/lib/auth";
 import { getDb } from "@/lib/db";
@@ -37,12 +38,6 @@ export default async function ParticipantShopPage({ searchParams }: ParticipantS
 
   return (
     <div className="space-y-4">
-      {params.purchased ? (
-        <p className="rounded-[8px] border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-          Покупка оформлена.
-        </p>
-      ) : null}
-
       {params.error ? (
         <p className="rounded-[8px] border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {errorMessages[params.error] ?? "Не удалось оформить покупку."}
@@ -55,7 +50,7 @@ export default async function ParticipantShopPage({ searchParams }: ParticipantS
 
       <SectionPanel eyebrow="Магазин" title="Товары">
         {items.length === 0 ? (
-          <p>Активных товаров пока нет.</p>
+          <EmptyState title="Нет покупок" description="Магазин скоро пополнится аккуратными наградами." />
         ) : (
           <div className="space-y-3">
             {items.map((item) => {

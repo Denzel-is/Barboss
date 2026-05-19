@@ -1,4 +1,5 @@
 import { ArchiveShopItemButton } from "@/components/archive-shop-item-button";
+import { EmptyState } from "@/components/empty-state";
 import { SectionPanel } from "@/components/section-panel";
 import { archiveShopItemAction, createShopItemAction, updateShopItemAction } from "@/app/(admin)/admin/shop/actions";
 import { getDb } from "@/lib/db";
@@ -131,7 +132,7 @@ export default async function AdminShopPage({ searchParams }: AdminShopPageProps
 
       <SectionPanel eyebrow="Магазин" title={`Товары: ${items.length}`}>
         {items.length === 0 ? (
-          <p>Товаров пока нет.</p>
+          <EmptyState title="Нет покупок" description="Добавь первый предмет, чтобы магазин выглядел живым." />
         ) : (
           <div className="space-y-3">
             {items.map((item) => (

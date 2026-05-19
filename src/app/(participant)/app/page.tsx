@@ -1,4 +1,5 @@
 import { SectionPanel } from "@/components/section-panel";
+import { EmptyState } from "@/components/empty-state";
 import { requireRole } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { formatBalance, formatReward } from "@/lib/format";
@@ -36,7 +37,7 @@ export default async function ParticipantHomePage() {
 
       <SectionPanel eyebrow="Кошелек" title="Последние операции">
         {recentTransactions.length === 0 ? (
-          <p>Операций пока нет.</p>
+          <EmptyState title="Нет покупок" description="История пополнится после заданий и магазина." />
         ) : (
           <ul className="divide-y divide-neutral-200">
             {recentTransactions.map((transaction) => (

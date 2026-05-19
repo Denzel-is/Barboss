@@ -7,7 +7,9 @@ import { requireRole } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { formatReward } from "@/lib/format";
 import { writeAuthLog } from "@/lib/logs";
-import { sendTelegramNotification } from "@/lib/telegram";
+import { NOTIFICATION_TYPES, TOAST_KEYS } from "@/lib/notification-types";
+import { createAdminNotifications, createNotification } from "@/lib/notifications";
+import { notifyAdminNewPurchase, notifyParticipantPurchase } from "@/lib/telegram";
 
 function getFormString(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -64,28 +66,24 @@ export async function buyShopItemAction(formData: FormData) {
       },
     });
 
-    await tx.notification.create({
-      data: {
+    await createNotification(
+      {
         userId: user.id,
         title: "Покупка оформлена",
-        body: `${item.title}: ${formatReward(-item.price)}.`,
+        message: `«${item.title}»: ${formatReward(-item.price)}.`,
+        type: NOTIFICATION_TYPES.shopPurchased,
       },
-    });
+      tx,
+    );
 
-    const admins = await tx.user.findMany({
-      where: { role: "admin" },
-      select: { id: true },
-    });
-
-    if (admins.length > 0) {
-      await tx.notification.createMany({
-        data: admins.map((admin) => ({
-          userId: admin.id,
-          title: "Новая покупка",
-          body: `${user.username} купила "${item.title}" за ${item.price} райданчиков.`,
-        })),
-      });
-    }
+    await createAdminNotifications(
+      {
+        title: "Новая покупка",
+        message: `${user.username} купил(а) «${item.title}» за ${item.price} райданчиков.`,
+        type: NOTIFICATION_TYPES.shopSale,
+      },
+      tx,
+    );
 
     return {
       status: "purchased" as const,
@@ -109,16 +107,25 @@ export async function buyShopItemAction(formData: FormData) {
     userId: user.id,
   });
 
-  await sendTelegramNotification({
+  await notifyAdminNewPurchase({
     itemTitle: result.itemTitle,
     price: result.price,
     purchasedAt: result.purchasedAt,
     username: user.username,
+    userId: user.id,
+  });
+
+  await notifyParticipantPurchase({
+    itemTitle: result.itemTitle,
+    price: result.price,
+    userId: user.id,
   });
 
   revalidatePath("/app");
   revalidatePath("/app/shop");
+  revalidatePath("/app/notifications");
   revalidatePath("/admin");
   revalidatePath("/admin/shop");
-  redirect("/app/shop?purchased=1");
+  revalidatePath("/admin/notifications");
+  redirect(`/app/shop?toast=${TOAST_KEYS.shopPurchased}`);
 }
