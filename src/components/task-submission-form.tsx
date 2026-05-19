@@ -6,7 +6,7 @@ import { submitTaskAction } from "@/app/(participant)/app/tasks/actions";
 import { LiveVideoRecorder, type RecordedVideoClip } from "@/components/live-video-recorder";
 import type { StorageDriver } from "@/lib/storage";
 import { hasSupabasePublishableOnly } from "@/lib/supabase-server";
-import { isSixCircleTaskTitle } from "@/lib/task-requirements";
+import { isSixCircleTaskTitle, SIX_CIRCLE_MIN_DURATION_MS } from "@/lib/task-requirements";
 
 type UploadedFilePayload = {
   fileUrl: string;
@@ -68,6 +68,11 @@ export function TaskSubmissionForm({
 
     if (isSixCircleTask && recordedClips.length !== 1) {
       setError("Отправляй кружочки по одному. Райданчики начислятся после 6 принятых видео за день.");
+      return;
+    }
+
+    if (isSixCircleTask && recordedClips.some((clip) => clip.durationMs < SIX_CIRCLE_MIN_DURATION_MS)) {
+      setError("Кружочек должен быть не меньше 10 секунд. Сними новое видео чуть длиннее.");
       return;
     }
 
@@ -151,6 +156,7 @@ export function TaskSubmissionForm({
           {isSixCircleTask ? (
             <p className="rounded-[8px] bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-800">
               Сними и отправь один кружочек сейчас. Остальные можно отправить позже в течение дня.
+              Каждый кружочек должен быть не меньше 10 секунд.
             </p>
           ) : null}
         <LiveVideoRecorder
@@ -158,6 +164,7 @@ export function TaskSubmissionForm({
           isCircle={isCircle}
           maxClips={maxClips}
           maxDurationSeconds={isCircle ? 15 : 120}
+          minDurationSeconds={isSixCircleTask ? SIX_CIRCLE_MIN_DURATION_MS / 1000 : 0}
           onClipsChange={handleClipsChange}
         />
         </>

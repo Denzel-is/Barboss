@@ -8,7 +8,12 @@ import { requireRole } from "@/lib/auth";
 import { writeAuthLog } from "@/lib/logs";
 import { NOTIFICATION_TYPES, TOAST_KEYS } from "@/lib/notification-types";
 import { createAdminNotifications, createNotification } from "@/lib/notifications";
-import { getMoscowDayRange, isSixCircleTaskTitle, SIX_CIRCLE_REQUIRED_COUNT } from "@/lib/task-requirements";
+import {
+  getMoscowDayRange,
+  isSixCircleTaskTitle,
+  SIX_CIRCLE_MIN_DURATION_MS,
+  SIX_CIRCLE_REQUIRED_COUNT,
+} from "@/lib/task-requirements";
 import { notifyAdminNewSubmission } from "@/lib/telegram";
 
 function getFormString(formData: FormData, name: string) {
@@ -170,6 +175,13 @@ export async function submitTaskAction(formData: FormData) {
 
   if (isSixCircleTask && videoCount !== 1) {
     redirect("/app/tasks?error=video_required");
+  }
+
+  if (
+    isSixCircleTask &&
+    files.some((file) => file.fileType.startsWith("video/") && (file.durationMs ?? 0) < SIX_CIRCLE_MIN_DURATION_MS)
+  ) {
+    redirect("/app/tasks?error=video_too_short");
   }
 
   await db.$transaction(async (tx) => {

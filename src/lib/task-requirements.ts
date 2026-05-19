@@ -1,4 +1,5 @@
 export const SIX_CIRCLE_REQUIRED_COUNT = 6;
+export const SIX_CIRCLE_MIN_DURATION_MS = 10_000;
 
 const MOSCOW_OFFSET_MS = 3 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;

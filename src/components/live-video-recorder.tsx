@@ -18,6 +18,7 @@ type LiveVideoRecorderProps = {
   isCircle?: boolean;
   maxClips?: number;
   maxDurationSeconds?: number;
+  minDurationSeconds?: number;
   onClipsChange: (clips: RecordedVideoClip[]) => void;
 };
 
@@ -47,6 +48,7 @@ export function LiveVideoRecorder({
   isCircle = false,
   maxClips = 1,
   maxDurationSeconds = 120,
+  minDurationSeconds = 0,
   onClipsChange,
 }: LiveVideoRecorderProps) {
   const [clips, setClips] = useState<RecordedVideoClip[]>([]);
@@ -193,7 +195,7 @@ export function LiveVideoRecorder({
         setElapsedMs(nextElapsed);
 
         if (nextElapsed >= maxDurationSeconds * 1000) {
-          stopRecording();
+          stopRecording({ force: true });
         }
       }, 200);
     } catch (cameraError) {
@@ -210,13 +212,23 @@ export function LiveVideoRecorder({
     }
   }
 
-  function stopRecording() {
+  function stopRecording(options?: { force?: boolean }) {
     if (!recorderRef.current || recorderRef.current.state === "inactive") {
-      return;
+      return false;
+    }
+
+    const durationMs = Date.now() - startedAtRef.current;
+    const minDurationMs = minDurationSeconds * 1000;
+
+    if (!options?.force && minDurationMs > 0 && durationMs < minDurationMs) {
+      const remainingSeconds = Math.ceil((minDurationMs - durationMs) / 1000);
+      setError(`Видео должно быть не меньше ${minDurationSeconds} секунд. Осталось ${remainingSeconds} сек.`);
+      return false;
     }
 
     recorderRef.current.stop();
     recorderRef.current = null;
+    return true;
   }
 
   function removeClip(clipId: string) {
@@ -253,6 +265,7 @@ export function LiveVideoRecorder({
         <p className="text-sm font-medium text-neutral-800">Снять видео сейчас *</p>
         <p className="text-xs text-neutral-500">
           Галерея отключена — только запись с камеры. {maxClips > 1 ? `Нужно до ${maxClips} видео.` : "Нужно 1 видео."}
+          {minDurationSeconds > 0 ? ` Минимум ${minDurationSeconds} секунд.` : ""}
         </p>
       </div>
 
@@ -296,7 +309,7 @@ export function LiveVideoRecorder({
         ) : (
           <button
             className="h-11 rounded-[8px] bg-red-700 px-3 text-sm font-semibold text-white"
-            onClick={stopRecording}
+            onClick={() => stopRecording()}
             type="button"
           >
             Остановить

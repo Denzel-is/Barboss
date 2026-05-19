@@ -112,6 +112,8 @@ export default async function ParticipantTasksPage({ searchParams }: TasksPagePr
         <p className="rounded-[8px] border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {params.error === "video_required"
             ? "Для задания нужно прикрепить видео."
+            : params.error === "video_too_short"
+              ? "Кружочек должен быть не меньше 10 секунд."
             : "Не удалось отправить задание. Попробуй еще раз."}
         </p>
       ) : null}
