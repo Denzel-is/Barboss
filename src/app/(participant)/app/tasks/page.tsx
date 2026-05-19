@@ -6,6 +6,7 @@ import { formatReward } from "@/lib/format";
 import { getDb } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
 import { getStorageDriver, isStorageConfigured } from "@/lib/storage";
+import { getMoscowDayRange, isSixCircleTaskTitle, SIX_CIRCLE_REQUIRED_COUNT } from "@/lib/task-requirements";
 
 type TasksPageProps = {
   searchParams: Promise<{
@@ -48,8 +49,9 @@ export default async function ParticipantTasksPage({ searchParams }: TasksPagePr
   const params = await searchParams;
   const storageConfigured = isStorageConfigured();
   const storageDriver = getStorageDriver();
+  const today = getMoscowDayRange();
 
-  const [tasks, pendingSubmissions] = await Promise.all([
+  const [tasks, pendingSubmissions, todayProgressSubmissions] = await Promise.all([
     getDb().task.findMany({
       where: { isActive: true },
       orderBy: [{ category: "asc" }, { createdAt: "asc" }],
@@ -63,9 +65,40 @@ export default async function ParticipantTasksPage({ searchParams }: TasksPagePr
         taskId: true,
       },
     }),
+    getDb().taskSubmission.findMany({
+      where: {
+        userId: user.id,
+        status: { in: ["pending", "approved"] },
+        createdAt: {
+          gte: today.start,
+          lt: today.end,
+        },
+      },
+      select: {
+        taskId: true,
+        status: true,
+      },
+    }),
   ]);
 
   const pendingTaskIds = new Set(pendingSubmissions.map((submission) => submission.taskId));
+  const progressByTaskId = new Map<string, { approved: number; pending: number; total: number }>();
+
+  for (const submission of todayProgressSubmissions) {
+    const current = progressByTaskId.get(submission.taskId) ?? { approved: 0, pending: 0, total: 0 };
+
+    if (submission.status === "approved") {
+      current.approved += 1;
+    }
+
+    if (submission.status === "pending") {
+      current.pending += 1;
+    }
+
+    current.total += 1;
+    progressByTaskId.set(submission.taskId, current);
+  }
+
   const groupedTasks = tasks.reduce<Record<string, typeof tasks>>((groups, task) => {
     groups[task.category] = groups[task.category] ?? [];
     groups[task.category].push(task);
@@ -91,7 +124,11 @@ export default async function ParticipantTasksPage({ searchParams }: TasksPagePr
         <SectionPanel eyebrow="Задания" title={category} key={category}>
           <div className="space-y-3">
             {(groupedTasks[category] ?? []).map((task) => {
+              const isSixCircleTask = isSixCircleTaskTitle(task.title);
+              const progress = progressByTaskId.get(task.id) ?? { approved: 0, pending: 0, total: 0 };
               const isPending = pendingTaskIds.has(task.id);
+              const isSixCircleFull = isSixCircleTask && progress.total >= SIX_CIRCLE_REQUIRED_COUNT;
+              const shouldBlockSubmission = isSixCircleTask ? isSixCircleFull : isPending;
 
               return (
                 <article className="relative rounded-[8px] border border-neutral-200 p-3" key={task.id}>
@@ -115,11 +152,18 @@ export default async function ParticipantTasksPage({ searchParams }: TasksPagePr
                     {task.isDaily ? <span className="rounded-[8px] bg-neutral-100 px-2 py-1">ежедневное</span> : null}
                     {task.isPenalty ? <span className="rounded-[8px] bg-red-50 px-2 py-1 text-red-700">штраф</span> : null}
                     <span className="rounded-[8px] bg-violet-50 px-2 py-1 text-violet-800">видео</span>
+                    {isSixCircleTask ? (
+                      <span className="rounded-[8px] bg-emerald-50 px-2 py-1 text-emerald-800">
+                        {progress.total}/{SIX_CIRCLE_REQUIRED_COUNT} кружочков
+                      </span>
+                    ) : null}
                   </div>
 
-                  {isPending ? (
+                  {shouldBlockSubmission ? (
                     <p className="mt-3 rounded-[8px] bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800">
-                      Уже на проверке.
+                      {isSixCircleTask
+                        ? "Сегодня отправлены все 6 кружочков. Райданчики придут после принятия всех видео."
+                        : "Уже на проверке."}
                     </p>
                   ) : (
                     <details className="mt-3">

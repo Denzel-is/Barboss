@@ -8,6 +8,7 @@ import { requireRole } from "@/lib/auth";
 import { writeAuthLog } from "@/lib/logs";
 import { NOTIFICATION_TYPES, TOAST_KEYS } from "@/lib/notification-types";
 import { createAdminNotifications, createNotification } from "@/lib/notifications";
+import { getMoscowDayRange, isSixCircleTaskTitle, SIX_CIRCLE_REQUIRED_COUNT } from "@/lib/task-requirements";
 import { notifyAdminNewSubmission } from "@/lib/telegram";
 
 function getFormString(formData: FormData, name: string) {
@@ -96,19 +97,40 @@ export async function submitTaskAction(formData: FormData) {
     redirect("/app/tasks?error=task");
   }
 
-  const existingPending = await db.taskSubmission.findFirst({
-    where: {
-      taskId: task.id,
-      userId: user.id,
-      status: "pending",
-    },
-    select: {
-      id: true,
-    },
-  });
+  const isSixCircleTask = isSixCircleTaskTitle(task.title);
 
-  if (existingPending) {
-    redirect("/app/tasks?submitted=1");
+  if (isSixCircleTask) {
+    const today = getMoscowDayRange();
+    const todayAcceptedOrPendingCount = await db.taskSubmission.count({
+      where: {
+        taskId: task.id,
+        userId: user.id,
+        status: { in: ["pending", "approved"] },
+        createdAt: {
+          gte: today.start,
+          lt: today.end,
+        },
+      },
+    });
+
+    if (todayAcceptedOrPendingCount >= SIX_CIRCLE_REQUIRED_COUNT) {
+      redirect("/app/tasks?submitted=1");
+    }
+  } else {
+    const existingPending = await db.taskSubmission.findFirst({
+      where: {
+        taskId: task.id,
+        userId: user.id,
+        status: "pending",
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (existingPending) {
+      redirect("/app/tasks?submitted=1");
+    }
   }
 
   const hasVideo = files.some((file) => file.fileType.startsWith("video/"));
@@ -144,10 +166,9 @@ export async function submitTaskAction(formData: FormData) {
     }
   }
 
-  const circleTask = task.title.toLowerCase().includes("кружоч");
   const videoCount = files.filter((file) => file.fileType.startsWith("video/")).length;
 
-  if (circleTask && videoCount < 6) {
+  if (isSixCircleTask && videoCount !== 1) {
     redirect("/app/tasks?error=video_required");
   }
 

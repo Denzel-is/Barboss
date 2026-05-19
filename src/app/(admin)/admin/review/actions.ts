@@ -9,6 +9,12 @@ import { writeAuthLog } from "@/lib/logs";
 import { formatReward } from "@/lib/format";
 import { NOTIFICATION_TYPES, TOAST_KEYS } from "@/lib/notification-types";
 import { createNotification } from "@/lib/notifications";
+import {
+  getMoscowDayRange,
+  getSixCircleRewardSourceId,
+  isSixCircleTaskTitle,
+  SIX_CIRCLE_REQUIRED_COUNT,
+} from "@/lib/task-requirements";
 import { notifyParticipantTaskApproved, notifyParticipantTaskRejected } from "@/lib/telegram";
 
 function getFormString(formData: FormData, name: string) {
@@ -64,7 +70,46 @@ export async function reviewSubmissionAction(formData: FormData) {
 
     const approved = intent === "approve";
 
-    if (approved) {
+    const isSixCircleTask = isSixCircleTaskTitle(submission.task.title);
+    let rewardCredited = false;
+    let approvedVideoCountToday: number | null = null;
+
+    if (approved && isSixCircleTask) {
+      const submissionDay = getMoscowDayRange(submission.createdAt);
+      approvedVideoCountToday = await tx.submissionFile.count({
+        where: {
+          fileType: { startsWith: "video/" },
+          submission: {
+            taskId: submission.taskId,
+            userId: submission.userId,
+            status: "approved",
+            createdAt: {
+              gte: submissionDay.start,
+              lt: submissionDay.end,
+            },
+          },
+        },
+      });
+
+      const rewardSourceId = getSixCircleRewardSourceId(submission.taskId, submission.userId, submission.createdAt);
+      const existingReward = await tx.walletTransaction.findFirst({
+        where: { sourceId: rewardSourceId },
+        select: { id: true },
+      });
+
+      if (approvedVideoCountToday >= SIX_CIRCLE_REQUIRED_COUNT && !existingReward) {
+        await tx.walletTransaction.create({
+          data: {
+            userId: submission.userId,
+            amount: submission.task.reward,
+            type: submission.task.reward < 0 ? "penalty" : "task_reward",
+            sourceId: rewardSourceId,
+            description: submission.task.title,
+          },
+        });
+        rewardCredited = true;
+      }
+    } else if (approved) {
       await tx.walletTransaction.create({
         data: {
           userId: submission.userId,
@@ -74,28 +119,41 @@ export async function reviewSubmissionAction(formData: FormData) {
           description: submission.task.title,
         },
       });
+      rewardCredited = true;
     }
 
     if (approved) {
-      await createNotification(
-        {
-          userId: submission.userId,
-          title: "Задание принято",
-          message: `«${submission.task.title}»: ${formatReward(submission.task.reward)}.`,
-          type: NOTIFICATION_TYPES.taskApproved,
-        },
-        tx,
-      );
+      if (isSixCircleTask && !rewardCredited) {
+        await createNotification(
+          {
+            userId: submission.userId,
+            title: "Кружочек принят",
+            message: `${approvedVideoCountToday ?? 1}/${SIX_CIRCLE_REQUIRED_COUNT} видео принято. Райданчики начислятся после 6 принятых кружочков.`,
+            type: NOTIFICATION_TYPES.taskApproved,
+          },
+          tx,
+        );
+      } else {
+        await createNotification(
+          {
+            userId: submission.userId,
+            title: "Задание принято",
+            message: `«${submission.task.title}»: ${formatReward(submission.task.reward)}.`,
+            type: NOTIFICATION_TYPES.taskApproved,
+          },
+          tx,
+        );
 
-      await createNotification(
-        {
-          userId: submission.userId,
-          title: "Райданчики начислены",
-          message: `${formatReward(submission.task.reward)} за «${submission.task.title}».`,
-          type: NOTIFICATION_TYPES.rewardCredited,
-        },
-        tx,
-      );
+        await createNotification(
+          {
+            userId: submission.userId,
+            title: "Райданчики начислены",
+            message: `${formatReward(submission.task.reward)} за «${submission.task.title}».`,
+            type: NOTIFICATION_TYPES.rewardCredited,
+          },
+          tx,
+        );
+      }
     } else {
       await createNotification(
         {
@@ -113,6 +171,7 @@ export async function reviewSubmissionAction(formData: FormData) {
       taskTitle: submission.task.title,
       participantId: submission.userId,
       participantUsername: submission.user.username,
+      rewardCredited,
       reward: submission.task.reward,
     };
   });
@@ -124,21 +183,32 @@ export async function reviewSubmissionAction(formData: FormData) {
   await writeAuthLog({
     action: result.approved ? "task_submission_approved" : "task_submission_rejected",
     message: result.approved
-      ? `${admin.username} approved "${result.taskTitle}" for ${result.participantUsername}: ${formatReward(result.reward)}.`
+      ? `${admin.username} approved "${result.taskTitle}" for ${result.participantUsername}${
+          result.rewardCredited ? `: ${formatReward(result.reward)}` : " without reward yet"
+        }.`
       : `${admin.username} rejected "${result.taskTitle}" for ${result.participantUsername}.`,
     userId: admin.id,
   });
 
-  if (result.approved) {
-    await notifyParticipantTaskApproved({
-      taskTitle: result.taskTitle,
-      reward: result.reward,
-      userId: result.participantId,
-    });
-  } else {
-    await notifyParticipantTaskRejected({
-      taskTitle: result.taskTitle,
-      userId: result.participantId,
+  try {
+    if (result.approved && result.rewardCredited) {
+      await notifyParticipantTaskApproved({
+        taskTitle: result.taskTitle,
+        reward: result.reward,
+        userId: result.participantId,
+      });
+    } else if (!result.approved) {
+      await notifyParticipantTaskRejected({
+        taskTitle: result.taskTitle,
+        userId: result.participantId,
+      });
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown notification error";
+    await writeAuthLog({
+      action: "participant_notification_failed",
+      message: message.slice(0, 500),
+      userId: admin.id,
     });
   }
 

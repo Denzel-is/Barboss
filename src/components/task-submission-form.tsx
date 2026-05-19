@@ -6,6 +6,7 @@ import { submitTaskAction } from "@/app/(participant)/app/tasks/actions";
 import { LiveVideoRecorder, type RecordedVideoClip } from "@/components/live-video-recorder";
 import type { StorageDriver } from "@/lib/storage";
 import { hasSupabasePublishableOnly } from "@/lib/supabase-server";
+import { isSixCircleTaskTitle } from "@/lib/task-requirements";
 
 type UploadedFilePayload = {
   fileUrl: string;
@@ -28,10 +29,6 @@ function isCircleVideoTask(taskTitle: string) {
   return taskTitle.toLowerCase().includes("кружоч");
 }
 
-function getMaxClips(taskTitle: string) {
-  return isCircleVideoTask(taskTitle) ? 6 : 1;
-}
-
 export function TaskSubmissionForm({
   taskId,
   taskTitle,
@@ -45,7 +42,8 @@ export function TaskSubmissionForm({
 
   const videoRequired = proofType === "video";
   const isCircle = isCircleVideoTask(taskTitle);
-  const maxClips = getMaxClips(taskTitle);
+  const isSixCircleTask = isSixCircleTaskTitle(taskTitle);
+  const maxClips = 1;
 
   const handleClipsChange = useCallback((clips: RecordedVideoClip[]) => {
     setRecordedClips(clips);
@@ -68,8 +66,8 @@ export function TaskSubmissionForm({
       return;
     }
 
-    if (isCircle && recordedClips.length < 6) {
-      setError("Для этого задания нужно снять 6 коротких видео-кружочков.");
+    if (isSixCircleTask && recordedClips.length !== 1) {
+      setError("Отправляй кружочки по одному. Райданчики начислятся после 6 принятых видео за день.");
       return;
     }
 
@@ -149,6 +147,12 @@ export function TaskSubmissionForm({
       </label>
 
       {videoRequired ? (
+        <>
+          {isSixCircleTask ? (
+            <p className="rounded-[8px] bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-800">
+              Сними и отправь один кружочек сейчас. Остальные можно отправить позже в течение дня.
+            </p>
+          ) : null}
         <LiveVideoRecorder
           disabled={uploading}
           isCircle={isCircle}
@@ -156,6 +160,7 @@ export function TaskSubmissionForm({
           maxDurationSeconds={isCircle ? 15 : 120}
           onClipsChange={handleClipsChange}
         />
+        </>
       ) : null}
 
       {storageDriver === "supabase" || storageDriver === "s3" ? (
@@ -175,7 +180,7 @@ export function TaskSubmissionForm({
         disabled={uploading || (videoRequired && recordedClips.length === 0)}
         type="submit"
       >
-        {uploading ? "Загрузка видео..." : "Отправить"}
+        {uploading ? "Загрузка видео..." : isSixCircleTask ? "Отправить кружочек" : "Отправить"}
       </button>
     </form>
   );

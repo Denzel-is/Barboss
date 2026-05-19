@@ -573,6 +573,7 @@ export function ChatView({ currentUserId, currentUsername, currentUserRole, init
         />
         <input
           accept="video/*"
+          capture="user"
           className="hidden"
           onChange={(event) => {
             const file = event.target.files?.[0];

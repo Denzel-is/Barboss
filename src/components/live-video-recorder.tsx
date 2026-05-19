@@ -112,7 +112,7 @@ export function LiveVideoRecorder({
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: true,
       video: {
-        facingMode: isCircle ? "user" : "environment",
+        facingMode: { exact: "user" },
         width: { ideal: 1280 },
         height: { ideal: 720 },
       },
@@ -197,8 +197,14 @@ export function LiveVideoRecorder({
         }
       }, 200);
     } catch (cameraError) {
-      const message =
-        cameraError instanceof Error ? cameraError.message : "Не удалось включить камеру. Разреши доступ к камере и микрофону.";
+      const isFacingModeError =
+        cameraError instanceof DOMException &&
+        (cameraError.name === "OverconstrainedError" || cameraError.name === "ConstraintNotSatisfiedError");
+      const message = isFacingModeError
+        ? "Нужна фронтальная камера. Открой Barboss на телефоне и разреши доступ к камере."
+        : cameraError instanceof Error
+          ? cameraError.message
+          : "Не удалось включить камеру. Разреши доступ к камере и микрофону.";
       setError(message);
       stopCamera();
     }
